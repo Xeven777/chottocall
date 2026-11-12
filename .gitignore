@@ -1,0 +1,47 @@
+# --- Secrets / env ---
+# Root .env holds real API keys (Groq, ElevenLabs, Speechify)
+.env
+.env.*
+!.env.example
+
+# --- Python (backend) ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+# downloaded voice/LLM models (backend/models/)
+models/
+*.gguf
+*.cact
+
+# --- Node / Next.js (frontend) ---
+node_modules/
+.next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+.turbo/
+.vercel/
+bun.lock.bak
+.eslintcache
+.pnpm-store/
+
+# --- Logs / debug ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
