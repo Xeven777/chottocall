@@ -36,6 +36,8 @@ from pipecat.services.openai.llm import OpenAILLMService
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "llama.cpp").strip().lower()
+# 1s was fine for localhost but times out on a remote/tunnelled server.
+LLM_PROBE_TIMEOUT = float(os.getenv("LLM_PROBE_TIMEOUT", "15"))
 
 # provider -> (base_url, pinned model, pipecat service class)
 LOCAL_PROVIDERS = {
@@ -55,7 +57,7 @@ LOCAL_PROVIDERS = {
 def _model_names(base_url: str) -> list[str] | None:
     """Model ids on an OpenAI-compatible server, or None when unreachable."""
     try:
-        resp = httpx.get(f"{base_url.rstrip('/')}/models", timeout=1.0)
+        resp = httpx.get(f"{base_url.rstrip('/')}/models", timeout=LLM_PROBE_TIMEOUT)
         resp.raise_for_status()
         data = resp.json().get("data", [])
         names = [m["id"] for m in data if m.get("id")]
@@ -63,7 +65,8 @@ def _model_names(base_url: str) -> list[str] | None:
             return names
         # Non-OpenAI shape (older Ollama via /api/tags): fall through to no models.
         return []
-    except Exception:
+    except Exception as e:
+        logger.debug(f"model probe failed for {base_url}: {type(e).__name__}: {e}")
         return None
 
 

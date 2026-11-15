@@ -45,7 +45,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 
-const OFFER_URL = "http://localhost:8000/api/offer"
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/+$/, "")
+const OFFER_URL = `${API_BASE_URL}/api/offer`
 
 type Status = "idle" | "connecting" | "live" | "error"
 type Line = { who: "user" | "bot"; text: string; at: number }

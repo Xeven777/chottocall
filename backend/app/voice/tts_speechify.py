@@ -22,7 +22,8 @@ _EMOJI_RE = re.compile(
 )
 
 
-def _strip_emoji(text: str, text_type: str) -> str:
+async def _strip_emoji(text: str, text_type: str) -> str:
+    # TextTransform is async: pipecat does `await transform(text, text_type)`.
     return re.sub(r"  +", " ", _EMOJI_RE.sub("", text)).strip()
 
 
