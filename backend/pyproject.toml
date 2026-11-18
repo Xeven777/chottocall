@@ -9,7 +9,36 @@ dependencies = [
     "pipecat-ai[groq,local,silero,webrtc]>=1.15.0",
     "python-dotenv>=1.2.4",
     "uvicorn[standard]>=0.30,<1.0",
+    # Mithi TTS (local). Kept in the base set so a plain `uv run` never silently
+    # strips it and drops the voice pipeline back to Speechify.
+    "torch>=2.15",
+    "triton-xpu>=3.9,<3.10",
+    "transformers>=5.0",
+    "safetensors>=0.4",
+    "sentencepiece>=0.2",
+    "numpy>=1.26",
+    "soundfile>=0.12",
+    "misaki[en]>=0.9.4",
+    "espeakng-loader>=0.2.4",
+    "phonemizer-fork>=3.3.2",
+    "spacy>=3.8",
+    # misaki's English G2P loads this at synthesis time; pin it so no call
+    # depends on a runtime spacy.cli.download (needed even for Latin words in Bengali).
+    "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
+    "num2words>=0.5",
+    "huggingface_hub>=0.26",
 ]
 
 [tool.uv]
 package = false
+
+# The Intel Arc (XPU) build of torch also runs on CPU, so it is the one we lock.
+# It lives on PyTorch's own index, not PyPI.
+[[tool.uv.index]]
+name = "pytorch-xpu"
+url = "https://download.pytorch.org/whl/xpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-xpu" }
+triton-xpu = { index = "pytorch-xpu" }
