@@ -12,7 +12,7 @@ Two independent services, no root manifest, no CI, no tests. Both must run for a
 
 ## Env: two separate files
 
-- Backend reads the **root** `.env` (gitignored, template `.env.example`) at import time via `find_dotenv()` in `app/voice/llm.py`. There is no `backend/.env`.
+- Backend reads the **root** `.env` (gitignored, template `.env.example`) at import time via `find_dotenv()` in `app/voice/settings.py`. There is no `backend/.env`.
 - Frontend reads `frontend/.env.local` (template `frontend/.env.example`) with `NEXT_PUBLIC_API_URL`; only `NEXT_PUBLIC_*` reaches the browser. Backend CORS allows only `http://localhost:3000`.
 
 ## Backend wiring
@@ -21,9 +21,10 @@ Two independent services, no root manifest, no CI, no tests. Both must run for a
 - Pipeline is assembled in `app/voice/pipeline.py::build_pipeline(transport)`:
   `transport.input → HalfDuplexProcessor → VADProcessor(Silero) → ShrutiSTTService → user aggregator (SmartTurn) → LLM → SpeechifyTTS → transport.output → assistant aggregator`.
   Half-duplex is deliberately **before** VAD so the bot's own voice isn't heard as user speech; don't reorder.
-- LLM choice in `app/voice/llm.py` is local-first — llama.cpp (:8080/v1) → Ollama (:11434/v1) → Groq fallback — with env read at call time. Keep `LLM_MAX_TOKENS=256` and the per-request `enable_thinking: false`: uncapped reasoning models produce 45s+ turns nobody hears. `LLM_PROBE_TIMEOUT` defaults to 15s (1s broke tunnelled hosts). Serve reasoning models with `llama serve -m model.gguf -c 2048 --port 8080 -rea off`.
+- Providers are swapped by env chain, not by editing the pipeline: `app/voice/providers/` holds one registry per component (`STT_PROVIDER`, `LLM_PROVIDER`, `TTS_PROVIDER`, `VAD_PROVIDER`, `TURN_PROVIDER`), each a comma-separated preference list. `build_pipeline` only calls `build_stt/build_llm/build_tts/build_vad/build_turn` from `app/voice/providers/__init__.py`; keep provider names and env reads out of `pipeline.py`. Adding a provider = one decorated factory in its component module. Env snapshots are typed dataclasses in `app/voice/settings.py`, read per call via `from_env()`.
+- LLM choice in `app/voice/providers/llm.py` is local-first — llama.cpp (:8080/v1) → Ollama (:11434/v1) → Groq fallback — with env read at call time. `LLM_PROVIDER` is a comma-separated chain and Groq is appended when missing, so a local-only setting still has a fallback. Keep `LLM_MAX_TOKENS=256` and the per-request `enable_thinking: false`: uncapped reasoning models produce 45s+ turns nobody hears. `LLM_PROBE_TIMEOUT` defaults to 15s (1s broke tunnelled hosts). Serve reasoning models with `llama serve -m model.gguf -c 2048 --port 8080 -rea off`.
 - STT `ShrutiSTTService` uses cactus Whistle with `models/shruti-bengali.cact`. The path is **relative to cwd** — run backend commands from `backend/`. It auto-downloads via `huggingface_hub` if missing (gitignored) and loads once per process (~3s).
-- TTS `SpeechifyTTSService` streams `pcm_24000` Bengali (`bn-IN`, voice `ritwik`, model `simba-3.5` — 3.2 is English-only) and needs `SPEECHIFY_API_KEY`. Emojis are stripped before synthesis. One sentence = one API call; multi-sentence replies are several back-to-back calls **by design**.
+- TTS `SpeechifyTTSService` streams `pcm_24000` Bengali (`bn-IN`, voice `ritwik`, model `simba-3.5` — 3.2 is English-only) and needs `SPEECHIFY_API_KEY`. Emojis are stripped before synthesis (`app/voice/text.py`). One sentence = one API call; multi-sentence replies are several back-to-back calls **by design**. Mithi has no knowledge of Speechify: when both are in `TTS_PROVIDER`, `providers/fallback.py::FallbackTTSService` retries a failed sentence with the next provider and never restarts one that already produced audio.
 - Barge-in is off by default: the mic is muted while the bot speaks (no echo cancellation). `CHOTTO_BARGE_IN=1` opens it; interruptions still depend on the SmartTurn wiring.
 
 ## Frontend wiring

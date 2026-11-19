@@ -1,8 +1,12 @@
-"""The ChottoCall voice pipeline, independent of how audio reaches it."""
+"""The ChottoCall voice pipeline, independent of how audio reaches it.
 
-import os
+Provider selection lives in :mod:`app.voice.providers`; this module only wires
+the stages in the order they must run:
 
-from pipecat.audio.vad.silero import SileroVADAnalyzer
+    input -> half-duplex -> VAD -> STT -> user aggregator -> LLM -> TTS
+          -> output -> assistant aggregator
+"""
+
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.processors.aggregators.llm_context import LLMContext
 from pipecat.processors.aggregators.llm_response_universal import (
@@ -13,22 +17,21 @@ from pipecat.processors.audio.vad_processor import VADProcessor
 from pipecat.transports.base_transport import BaseTransport
 
 from app.voice.half_duplex import HalfDuplexProcessor
-from app.voice.llm import build_llm
-from app.voice.smart_turn import user_turn_strategies, user_turn_strategies_params
-from app.voice.stt_shruti import ShrutiSTTService
-from app.voice.tts_mithi import MithiTTSService
-
-ENABLE_BARGE_IN = os.getenv("CHOTTO_BARGE_IN", "0").strip() in {"1", "true", "True", "yes", "YES"}
-
-# Kept as the Mithi fallback; used only when the local model can't produce audio.
-SPEECHIFY_API_KEY = os.getenv("SPEECHIFY_API_KEY", "")
-
-# Mithi TTS (local, optional). Paths are relative to cwd, like the STT model.
-TTS_MITHI_MODEL_DIR = os.getenv("TTS_MITHI_MODEL_DIR", "models/mithi-v2-flash")
-TTS_MITHI_VOICE = os.getenv("TTS_MITHI_VOICE", "satvik")
-TTS_MITHI_LANG = os.getenv("TTS_MITHI_LANG", "bn")
-TTS_MITHI_DEVICE = os.getenv("TTS_MITHI_DEVICE", "auto")
-TTS_MITHI_THREADS = int(os.getenv("TTS_MITHI_THREADS", "0") or 0)
+from app.voice.providers import (
+    build_llm,
+    build_stt,
+    build_tts,
+    build_turn,
+    build_vad,
+)
+from app.voice.settings import (
+    LLMConfig,
+    STTConfig,
+    TTSConfig,
+    TurnConfig,
+    VADConfig,
+    barge_in_enabled,
+)
 
 SYSTEM = (
     "তুমি চট্টোকল, একটি বন্ধুত্বপূর্ণ বাংলা ভয়েস সহকারী। "
@@ -38,17 +41,14 @@ SYSTEM = (
 
 
 def build_pipeline(transport: BaseTransport) -> Pipeline:
-    """Assemble input -> half-duplex -> VAD -> STT -> LLM -> TTS -> output.
-
-    Turn detection (SmartTurn) is configured through the user aggregator so the
-    bot doesn't start answering until the user is actually finished speaking.
-    """
+    """Assemble the pipeline around ``transport`` using the configured providers."""
     context = LLMContext()
+    turn = build_turn(TurnConfig.from_env())
     user_params = LLMUserAggregatorParams(
-        user_turn_strategies=user_turn_strategies(),
-        user_turn_strategies_params=user_turn_strategies_params(),
-        user_turn_stop_timeout=5.0,
-        user_idle_timeout=0.0,
+        user_turn_strategies=turn.strategies,
+        user_turn_strategies_params=turn.params,
+        user_turn_stop_timeout=turn.stop_timeout_s,
+        user_idle_timeout=turn.idle_timeout_s,
     )
     aggregators = LLMContextAggregatorPair(context, user_params=user_params)
 
@@ -60,21 +60,14 @@ def build_pipeline(transport: BaseTransport) -> Pipeline:
             # By default the mic is muted during bot speech (half-duplex), which
             # prevents barge-in entirely. Set CHOTTO_BARGE_IN=1 to open the mic
             # during playback; interruptions still require turn detection with
-            # enable_interruptions=True, which the current SmartTurn wiring already
-            # provides through the user aggregator.
-            HalfDuplexProcessor(barge_in=ENABLE_BARGE_IN),
-            VADProcessor(vad_analyzer=SileroVADAnalyzer()),
-            ShrutiSTTService(),
+            # enable_interruptions=True, which the SmartTurn wiring provides
+            # through the user aggregator.
+            HalfDuplexProcessor(barge_in=barge_in_enabled()),
+            VADProcessor(vad_analyzer=build_vad(VADConfig.from_env())),
+            build_stt(STTConfig.from_env()),
             aggregators.user(),
-            build_llm(SYSTEM),
-            MithiTTSService(
-                speechify_api_key=SPEECHIFY_API_KEY,
-                model_dir=TTS_MITHI_MODEL_DIR,
-                voice=TTS_MITHI_VOICE,
-                language=TTS_MITHI_LANG,
-                device=TTS_MITHI_DEVICE,
-                threads=TTS_MITHI_THREADS,
-            ),
+            build_llm(LLMConfig.from_env(), system_instruction=SYSTEM),
+            build_tts(TTSConfig.from_env()),
             transport.output(),
             aggregators.assistant(),
         ]

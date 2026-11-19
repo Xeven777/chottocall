@@ -25,9 +25,36 @@ mic → half-duplex → VAD (Silero) → STT → LLM → TTS → speaker
 - Text is synthesized **per sentence** — a multi-sentence answer is several TTS calls played back-to-back. That's the streaming design, not a bug.
 - With Mithi, the whole sentence is generated before playback starts, so expect a short pause (~1–3 s on a GPU, ~3 s on 4 CPU threads) before the voice begins. On an Intel Arc GPU we use PyTorch's `xpu` device automatically; CPU and NVIDIA CUDA also work. If Mithi fails to load or synthesize, the app silently uses Speechify (check the backend logs for why).
 
+## Provider abstraction
+
+The pipeline never names a concrete implementation. Each voice component has a
+registry in `backend/app/voice/providers/` and a comma-separated preference chain
+in the environment:
+
+| Component | Setting | Providers |
+|---|---|---|
+| STT | `STT_PROVIDER` | `shruti` |
+| LLM | `LLM_PROVIDER` | `llama.cpp`, `ollama`, `groq` |
+| TTS | `TTS_PROVIDER` | `mithi`, `speechify` |
+| VAD | `VAD_PROVIDER` | `silero` |
+| Turn detection | `TURN_PROVIDER` | `smart_turn`, `speech_timeout` |
+
+The first provider that reports itself available is built. Availability is
+checked without loading a model (a model file on disk, an API key, or a probe of
+`GET /v1/models`), lazily and in order — a working llama.cpp server never pays for
+an Ollama probe. TTS keeps the rest of its chain as a per-sentence runtime
+fallback. A local-only `LLM_PROVIDER` still gets Groq appended, so a call never
+dies because the local server is down.
+
+Adding a provider is one decorated factory: see
+`backend/app/voice/providers/base.py`. Nothing in the pipeline, settings, or API
+changes — the env setting chooses the implementation.
+
 ## LLM providers
 
-Selected with `LLM_PROVIDER`; whatever is chosen falls back to Groq when the local server is unreachable, so a call never dies because your local LLM is down.
+Selected with `LLM_PROVIDER`, a preference chain (default
+`llama.cpp,ollama,groq`). Whatever is chosen falls back to Groq when the local
+server is unreachable, so a call never dies because your local LLM is down.
 
 - `llama.cpp` (default) — [llama.cpp](https://github.com/ggml-org/llama.cpp) unified binary, OpenAI-compatible server on `:8080`:
   ```sh
@@ -43,8 +70,11 @@ Selected with `LLM_PROVIDER`; whatever is chosen falls back to Groq when the loc
 
 Mithi v2 Flash is a 199 MB local model (Apache-2.0) for 11 Indian languages. It runs
 in the backend process; there is no external TTS server. Bengali (`bn`) and the
-`satvik` male voice are the defaults. If the model is missing or errors, the app
-automatically falls back to Speechify (`SPEECHIFY_API_KEY` must be set for that).
+`satvik` male voice are the defaults. Mithi is skipped at build time when
+`models/mithi-v2-flash/run.py` is missing, so a machine without the model never
+loads torch; if a sentence still fails at synthesis time, the
+`FallbackTTSService` wrapper speaks it with the next provider in `TTS_PROVIDER`
+(Speechify, when `SPEECHIFY_API_KEY` is set).
 
 One-time setup, from `backend/`:
 
@@ -81,6 +111,10 @@ the audio plays normally.
    GROQ_API_KEY=...          # Groq fallback
    SPEECHIFY_API_KEY=...     # TTS fallback (can be empty if Mithi is installed)
    # optional overrides:
+   # TTS_PROVIDER=mithi,speechify   # provider chains: see "Provider abstraction"
+   # STT_PROVIDER=shruti
+   # VAD_PROVIDER=silero
+   # TURN_PROVIDER=smart_turn|speech_timeout
    # TTS_MITHI_VOICE=satvik  # see .env.example for all voices/options
    # TTS_MITHI_DEVICE=auto   # auto | xpu | cpu | cuda
    # LLM_PROVIDER=llama.cpp|ollama|groq

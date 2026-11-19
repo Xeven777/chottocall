@@ -4,6 +4,7 @@ import asyncio
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
 from pipecat.pipeline.worker import PipelineParams, PipelineWorker
 from pipecat.transports.base_transport import TransportParams
 from pipecat.transports.smallwebrtc.request_handler import (
@@ -15,8 +16,9 @@ from pipecat.transports.smallwebrtc.request_handler import (
 from pipecat.transports.smallwebrtc.transport import SmallWebRTCTransport
 from pipecat.workers.runner import WorkerRunner
 
-from app.voice.llm import GROQ_MODEL
 from app.voice.pipeline import build_pipeline
+from app.voice.providers.base import ProviderUnavailable
+from app.voice.settings import LLMConfig
 
 app = FastAPI(title="ChottoCall API")
 app.add_middleware(
@@ -35,8 +37,18 @@ async def run_bot(connection) -> None:
         connection,
         params=TransportParams(audio_in_enabled=True, audio_out_enabled=True),
     )
+    try:
+        pipeline = build_pipeline(transport)
+    except ProviderUnavailable as exc:
+        # A missing provider is a configuration problem, not a per-call one:
+        # log it plainly and drop the peer connection instead of leaving a
+        # half-open session (the request fails so the client can retry).
+        logger.error(f"cannot start the voice pipeline: {exc}")
+        await connection.disconnect()
+        raise
+
     worker = PipelineWorker(
-        build_pipeline(transport),
+        pipeline,
         params=PipelineParams(enable_metrics=True),
     )
 
@@ -62,7 +74,13 @@ async def health() -> dict[str, str]:
 async def list_models() -> dict:
     return {
         "object": "list",
-        "data": [{"id": GROQ_MODEL, "object": "model", "owned_by": "chottocall"}],
+        "data": [
+            {
+                "id": LLMConfig.from_env().groq_model,
+                "object": "model",
+                "owned_by": "chottocall",
+            }
+        ],
     }
 
 

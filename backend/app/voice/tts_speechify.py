@@ -6,25 +6,14 @@ decoding MP3 would add a stage and defeat the point of streaming.
 
 from collections.abc import AsyncGenerator
 
-import re
-
 import httpx
 from pipecat.frames.frames import Frame, TTSAudioRawFrame
 from pipecat.services.settings import TTSSettings
 from pipecat.services.tts_service import TTSService
 
+from app.voice.text import strip_emoji
+
 SAMPLE_RATE = 24000
-
-# Emoji are stripped before synthesis: the small local LLM keeps emitting them
-# despite the system prompt, and Speechify renders them as garbage or silence.
-_EMOJI_RE = re.compile(
-    r"[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\uFE0F\u200D\u20E3]"
-)
-
-
-async def _strip_emoji(text: str, text_type: str) -> str:
-    # TextTransform is async: pipecat does `await transform(text, text_type)`.
-    return re.sub(r"  +", " ", _EMOJI_RE.sub("", text)).strip()
 
 
 class SpeechifyTTSService(TTSService):
@@ -42,7 +31,7 @@ class SpeechifyTTSService(TTSService):
         super().__init__(
             sample_rate=SAMPLE_RATE,
             settings=TTSSettings(model=model, voice=voice_id, language=language),
-            text_transforms=[("*", _strip_emoji)],
+            text_transforms=[("*", strip_emoji)],
             **kwargs,
         )
         self._api_key = api_key
