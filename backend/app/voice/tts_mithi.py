@@ -11,9 +11,9 @@ service's job: ``TTS_PROVIDER`` names the chain and
 :class:`~app.voice.providers.fallback.FallbackTTSService` switches when a
 sentence fails.
 
-Device selection: ``TTS_MITHI_DEVICE=auto`` prefers CUDA, then an Intel Arc/XPU
-GPU (``torch.xpu``), then CPU. If XPU is detected but the model fails to load on
-it, we retry once on CPU before giving up and falling back to Speechify.
+Device selection: ``TTS_MITHI_DEVICE=auto`` prefers CUDA when available,
+otherwise CPU. A failed GPU load retries once on CPU before giving up and
+falling back to Speechify.
 """
 
 from __future__ import annotations
@@ -39,21 +39,11 @@ SAMPLE_RATE = 24000
 # 50 ms of 16-bit mono audio at 24 kHz. Must be an even number of bytes.
 FRAME_BYTES = int(SAMPLE_RATE * 0.05) * 2
 
-# Ordered by preference when device="auto". CUDA is first for the benefit of
-# anyone running this on an NVIDIA machine; Arc/XPU is the Intel path.
-_DEVICE_CANDIDATES = ("cuda", "xpu", "cpu")
-
-
 def _pick_device(torch, preferred: str) -> str:
     """Resolve the configured device to one torch actually has available."""
     if preferred != "auto":
         return preferred
-    if torch.cuda.is_available():
-        return "cuda"
-    xpu = getattr(torch, "xpu", None)
-    if xpu is not None and xpu.is_available():
-        return "xpu"
-    return "cpu"
+    return "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def _import_run_module(model_dir: Path) -> ModuleType:
@@ -112,10 +102,10 @@ def _load_model(model_dir: Path, device: str, threads: int):
     try:
         tts = run_module.Mithi(str(model_dir), device=chosen)
     except Exception as exc:
-        if chosen != "xpu":
+        if chosen == "cpu":
             raise
-        # A broken/missing oneAPI runtime is common; CPU always works.
-        logger.warning("Mithi failed on XPU (%s); retrying on CPU", exc)
+        # CPU always works; a GPU load can fail for driver/runtime reasons.
+        logger.warning("Mithi failed on %s (%s); retrying on CPU", chosen, exc)
         chosen = "cpu"
         tts = run_module.Mithi(str(model_dir), device=chosen)
     logger.info("Mithi TTS ready on %s", chosen)

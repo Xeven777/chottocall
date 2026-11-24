@@ -23,7 +23,7 @@ mic → half-duplex → VAD (Silero) → STT → LLM → TTS → speaker
 - **SmartTurn** detection stops the bot from answering until you're actually done.
 - The LLM speaks in 1–2 short Bengali sentences; emojis are stripped before TTS.
 - Text is synthesized **per sentence** — a multi-sentence answer is several TTS calls played back-to-back. That's the streaming design, not a bug.
-- With Mithi, the whole sentence is generated before playback starts, so expect a short pause (~1–3 s on a GPU, ~3 s on 4 CPU threads) before the voice begins. On an Intel Arc GPU we use PyTorch's `xpu` device automatically; CPU and NVIDIA CUDA also work. If Mithi fails to load or synthesize, the app silently uses Speechify (check the backend logs for why).
+- With Mithi, the whole sentence is generated before playback starts, so expect a short pause (~3 s on 4 CPU threads) before the voice begins. The locked torch wheel is CPU-only; NVIDIA CUDA also works when a CUDA build is installed. If Mithi fails to load or synthesize, the app silently uses Speechify (check the backend logs for why).
 
 ## Provider abstraction
 
@@ -79,7 +79,7 @@ loads torch; if a sentence still fails at synthesis time, the
 One-time setup, from `backend/`:
 
 ```sh
-uv sync                                   # installs torch (Intel Arc/XPU build; also runs on CPU)
+uv sync                                   # installs CPU-only torch from PyTorch's CPU index
 uv run hf download Oomni/mithi-v2-flash --local-dir models/mithi-v2-flash
 ```
 
@@ -136,7 +136,7 @@ if the backend URL changes.
    # VAD_PROVIDER=silero
    # TURN_PROVIDER=smart_turn|speech_timeout
    # TTS_MITHI_VOICE=satvik  # see .env.example for all voices/options
-   # TTS_MITHI_DEVICE=auto   # auto | xpu | cpu | cuda
+   # TTS_MITHI_DEVICE=auto   # auto | cpu | cuda
    # LLM_PROVIDER=llama.cpp|ollama|groq
    # LLAMA_CPP_BASE_URL=http://localhost:8080/v1
    # LLAMA_CPP_MODEL=<name>  # defaults to whatever the server has loaded

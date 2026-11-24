@@ -12,12 +12,12 @@ RUN bun run build
 
 FROM oven/bun:1-slim
 WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=build /app/package.json /app/bun.lock ./
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/.next ./.next
+ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0
+
+# standalone contains only the traced server files and minimal node_modules.
+COPY --from=build /app/.next/standalone ./
+COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
-COPY --from=build /app/next.config.ts ./next.config.ts
 
 EXPOSE 3000
-CMD ["bun", "run", "start"]
+CMD ["bun", "server.js"]
