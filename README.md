@@ -90,12 +90,32 @@ Important: Mithi is **not streaming** — it generates a whole sentence before
 playback begins (roughly 1–3 s on GPU, ~3 s on 4 CPU threads). Once it starts,
 the audio plays normally.
 
+## Docker Compose
+
+Build and start both services from the repo root:
+
+```sh
+docker compose up -d --build
+```
+
+The root `.env` is passed to the backend, and the frontend's `NEXT_PUBLIC_API_URL`
+is a **build arg** (default `http://localhost:8000`) because Next.js inlines it
+into the browser bundle. Models download once on first start into the gitignored
+`backend/models/` folder, which is shared with local runs. Open
+`http://localhost:3000`.
+
+The backend uses host networking so WebRTC host candidates are reachable from
+the browser — this works on Linux only. Set `CORS_ORIGINS` in `.env` when opening
+the app from a LAN IP or domain instead of `localhost:3000`. Rebuild the frontend
+if the backend URL changes.
+
 ## Setup
 
 1. **Backend** (Python 3.14, [uv](https://docs.astral.sh/uv/)):
    ```sh
    cd backend
    uv sync
+   uv run hf download Xeven7/tiny-swara --local-dir models/tiny-swara
    uv run uvicorn app.main:app --port 8000
    ```
 

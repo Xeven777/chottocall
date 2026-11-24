@@ -1,6 +1,7 @@
 """ChottoCall API: serves browser voice sessions over WebRTC."""
 
 import asyncio
+import os
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,7 +24,11 @@ from app.voice.settings import LLMConfig
 app = FastAPI(title="ChottoCall API")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        origin.strip()
+        for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+        if origin.strip()
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
