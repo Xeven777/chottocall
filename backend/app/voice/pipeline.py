@@ -32,17 +32,16 @@ from app.voice.settings import (
     VADConfig,
     barge_in_enabled,
 )
+from app.voice.tools import TOOLS
 
 SYSTEM = (
-    "তুমি চট্টোকল, একটি বন্ধুত্বপূর্ণ বাংলা ভয়েস সহকারী। "
-    "সংক্ষেপে, এক-দুই বাক্যে, সহজ বাংলায় উত্তর দাও। ফোনে শোনার জন্য বলছ, "
-    "তাই তালিকা, মার্কডাউন বা ইমোজি নয়।"
+    "তুমি চট্টোকল, একটি বন্ধুত্বপূর্ণ বাংলা ভয়েস সহকারী।সংক্ষেপে, এক-দুই বাক্যে, সহজ বাংলায় উত্তর দাও। ফোনে শোনার জন্য বলছ, তাই তালিকা, মার্কডাউন বা ইমোজি নয়। কোনো তথ্য দেখতে হলে আগে এক বাক্যে বলো যে দেখছ, তারপর টুল ব্যবহার করো।"
 )
 
 
 def build_pipeline(transport: BaseTransport) -> Pipeline:
     """Assemble the pipeline around ``transport`` using the configured providers."""
-    context = LLMContext()
+    context = LLMContext(tools=TOOLS)
     turn = build_turn(TurnConfig.from_env())
     user_params = LLMUserAggregatorParams(
         user_turn_strategies=turn.strategies,

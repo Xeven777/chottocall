@@ -1,6 +1,6 @@
 """TTS providers.
 
-``mithi`` is the local model (default); ``speechify`` is the hosted fallback.
+``tiny-swara`` (default) and ``mithi`` are local models; ``speechify`` is the hosted fallback.
 Availability is decided before construction, so a machine without the model
 skips loading torch entirely. When more than one provider in the chain is
 available, the build keeps them all and wraps them in a
@@ -15,8 +15,31 @@ from app.voice.providers.base import ProviderRegistry
 from app.voice.settings import TTSConfig
 from app.voice.tts_mithi import MithiTTSService
 from app.voice.tts_speechify import SpeechifyTTSService
+from app.voice.tts_tiny_swara import TinySwaraTTSService
 
 tts_providers: ProviderRegistry[TTSConfig, TTSService] = ProviderRegistry("TTS")
+
+
+def _tiny_swara_ready(config: TTSConfig) -> bool:
+    """inference.py and its ONNX weights must both be present."""
+    root = Path(config.tiny_swara_dir)
+    if config.tiny_swara_model:
+        model = Path(config.tiny_swara_model)
+        if not model.is_absolute():
+            model = root / model
+    else:
+        model = root / "onnx/tiny-swara-int8.onnx"
+    return (root / "inference.py").is_file() and model.is_file()
+
+
+@tts_providers.register("tiny-swara", available=_tiny_swara_ready)
+def build_tiny_swara(config: TTSConfig) -> TTSService:
+    return TinySwaraTTSService(
+        model_dir=config.tiny_swara_dir,
+        model=config.tiny_swara_model,
+        voice=config.tiny_swara_voice,
+        speed=config.tiny_swara_speed,
+    )
 
 
 def _mithi_ready(config: TTSConfig) -> bool:
