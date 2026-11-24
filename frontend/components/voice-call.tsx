@@ -132,7 +132,7 @@ const LangToggle = memo(function LangToggle({
           aria-pressed={locale === option}
           onClick={() => onChange(option)}
           className={cn(
-            "h-5.5 rounded-[4px] px-2 text-[11px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+            "h-5.5 rounded-sm px-2 text-[11px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
             locale === option
               ? "bg-primary text-primary-foreground"
               : "text-muted-foreground hover:text-foreground"
@@ -196,7 +196,7 @@ const CallActions = memo(function CallActions({
           className={cn(
             "h-12 w-13 shrink-0 px-0",
             muted &&
-              "border-destructive/35 bg-destructive/[0.08] text-destructive hover:bg-destructive/[0.12]"
+              "border-destructive/35 bg-destructive/8 text-destructive hover:bg-destructive/12"
           )}
         >
           {muted ? <MicrophoneSlash size={18} /> : <Microphone size={18} />}
@@ -370,31 +370,49 @@ export function VoiceCall() {
   const headFont = locale === "bn" ? "font-bengali" : "font-heading"
 
   return (
-    <div lang={locale} className="relative min-h-dvh overflow-hidden">
+    <div
+      lang={locale}
+      className="relative min-h-dvh overflow-hidden"
+      suppressHydrationWarning
+    >
       <div aria-hidden className="pointer-events-none fixed inset-0">
-        <div className="alpona-field absolute inset-0 opacity-60 mask-[radial-gradient(ellipse_72%_52%_at_50%_-6%,black,transparent)]" />
-        <div className="absolute -top-72 left-1/2 size-[40rem] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,color-mix(in_oklch,var(--primary)_13%,transparent),transparent_68%)]" />
-        <div className="absolute -right-32 bottom-[-12rem] size-[30rem] rounded-full bg-[radial-gradient(circle,color-mix(in_oklch,var(--accent)_85%,transparent),transparent_72%)] opacity-50" />
+        <div className="alpona-field absolute inset-0 mask-[radial-gradient(ellipse_72%_52%_at_50%_-6%,black,transparent)] opacity-60" />
+        <div className="absolute -top-72 left-1/2 size-160 -translate-x-1/2 rounded-full bg-[radial-gradient(circle,color-mix(in_oklch,var(--primary)_13%,transparent),transparent_68%)]" />
+        <div className="absolute -right-32 -bottom-48 size-120 rounded-full bg-[radial-gradient(circle,color-mix(in_oklch,var(--accent)_85%,transparent),transparent_72%)] opacity-50" />
       </div>
-      <div aria-hidden className="paper-grain pointer-events-none fixed inset-0 z-20" />
+      <div
+        aria-hidden
+        className="paper-grain pointer-events-none fixed inset-0 z-20"
+      />
 
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-6xl flex-col">
         <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-5 py-5 sm:px-10">
           <div className="rise-in flex min-w-0 items-center gap-3">
             <AlponaMark className="size-9 shrink-0 text-primary" />
             <div className="min-w-0">
-              <p className="text-[17px] leading-none font-semibold tracking-tight">{t.brand}</p>
-              <p className="mt-1.5 hidden font-heading text-[11.5px] italic text-muted-foreground sm:block">
+              <p className="text-[17px] leading-none font-semibold tracking-tight">
+                {t.brand}
+              </p>
+              <p className="mt-1.5 hidden font-heading text-[11.5px] text-muted-foreground italic sm:block">
                 {t.tagline}
               </p>
             </div>
           </div>
 
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-            <LangToggle locale={locale} onChange={setLocale} label={t.switchLanguage} />
-            <Badge variant="outline" className="h-7 gap-2 px-2.5 text-foreground">
+            <LangToggle
+              locale={locale}
+              onChange={setLocale}
+              label={t.switchLanguage}
+            />
+            <Badge
+              variant="outline"
+              className="h-7 gap-2 px-2.5 text-foreground"
+            >
               <StatusDot status={status} />
-              <span>{live && muted ? t.mutedLabel : t.statusLabel[status]}</span>
+              <span>
+                {live && muted ? t.mutedLabel : t.statusLabel[status]}
+              </span>
               {live && (
                 <span className="hidden sm:inline-flex">
                   <CallTimer />
@@ -412,13 +430,13 @@ export function VoiceCall() {
             </p>
             <h1
               className={cn(
-                "rise-in-1 mt-4 max-w-[16ch] text-[clamp(2.5rem,6vw,3.9rem)] leading-[1.06] font-semibold tracking-[-0.025em] text-balance",
+                "rise-in-1 mt-4 max-w-[16ch] text-[clamp(2.5rem,6vw,3.9rem)] leading-[1.06] font-semibold tracking-tight text-balance",
                 headFont
               )}
             >
               {t.headline}
             </h1>
-            <p className="rise-in-2 mt-4 max-w-[42ch] text-[15px] leading-[1.8] text-muted-foreground text-pretty">
+            <p className="rise-in-2 mt-4 max-w-[42ch] text-[15px] leading-[1.8] text-pretty text-muted-foreground">
               {t.intro}
             </p>
 
@@ -437,7 +455,7 @@ export function VoiceCall() {
                     <span className="ml-1 inline-block h-3.5 w-px animate-pulse bg-primary align-middle" />
                   )}
                 </p>
-                <p className="mt-2 max-w-[32ch] text-[13.5px] leading-[1.75] text-muted-foreground text-pretty">
+                <p className="mt-2 max-w-[32ch] text-[13.5px] leading-[1.75] text-pretty text-muted-foreground">
                   {copy.subline}
                 </p>
               </div>
@@ -470,11 +488,17 @@ export function VoiceCall() {
               {error && (
                 <Alert variant="destructive" className="mt-6">
                   <WarningCircle size={16} />
-                  <AlertTitle className="text-[13.5px]">{t.errorTitle}</AlertTitle>
+                  <AlertTitle className="text-[13.5px]">
+                    {t.errorTitle}
+                  </AlertTitle>
                   <AlertDescription className="text-[12.5px] leading-relaxed">
-                    <span>{error.code === "playback" ? t.errorPlayback : t.errorHint}</span>
+                    <span>
+                      {error.code === "playback"
+                        ? t.errorPlayback
+                        : t.errorHint}
+                    </span>
                     {error.code === "connection" && error.detail && (
-                      <span className="mt-1 block font-mono text-[11px] break-words opacity-80">
+                      <span className="mt-1 block font-mono text-[11px] wrap-break-word opacity-80">
                         {error.detail}
                       </span>
                     )}
@@ -486,29 +510,49 @@ export function VoiceCall() {
             </div>
           </section>
 
-          <Card aria-label={t.transcript} className="rise-in-2 gap-0 overflow-hidden py-0">
-            <div aria-hidden className="stitch h-[3px] w-full opacity-70" />
+          <Card
+            aria-label={t.transcript}
+            className="rise-in-2 gap-0 overflow-hidden py-0"
+          >
+            <div aria-hidden className="stitch h-0.75 w-full opacity-70" />
             <CardHeader className="px-6 pt-5 pb-4">
               <div>
                 <CardTitle className="text-[17px]">{t.transcript}</CardTitle>
                 <CardDescription className="mt-1 text-[12.5px]">
-                  {lines.length === 0 ? t.transcriptSub : t.lineCount(lines.length)}
+                  {lines.length === 0
+                    ? t.transcriptSub
+                    : t.lineCount(lines.length)}
                 </CardDescription>
               </div>
               <CardAction>
-                <Badge variant="secondary" className="gap-2 bg-primary/[0.08] text-primary">
+                <Badge
+                  variant="secondary"
+                  className="gap-2 bg-primary/8 text-primary"
+                >
                   <span
-                    className={cn("size-1.5 rounded-full", live ? "bg-primary" : "bg-muted-foreground/45")}
+                    className={cn(
+                      "size-1.5 rounded-full",
+                      live ? "bg-primary" : "bg-muted-foreground/45"
+                    )}
                   />
-                  <span>{live ? (muted ? t.transcriptBadge.muted : t.transcriptBadge.live) : t.transcriptBadge.idle}</span>
+                  <span>
+                    {live
+                      ? muted
+                        ? t.transcriptBadge.muted
+                        : t.transcriptBadge.live
+                      : t.transcriptBadge.idle}
+                  </span>
                 </Badge>
               </CardAction>
             </CardHeader>
 
             <div aria-hidden className="stitch-soft mx-6 h-px opacity-80" />
 
-            <div ref={scrollWrapRef} className="flex min-h-64 flex-1 flex-col lg:min-h-[30rem]">
-              <ScrollArea className="h-full min-h-64 flex-1 lg:min-h-[30rem]">
+            <div
+              ref={scrollWrapRef}
+              className="flex min-h-64 flex-1 flex-col lg:min-h-120"
+            >
+              <ScrollArea className="h-full min-h-64 flex-1 lg:min-h-120">
                 <div className="px-6 py-6">
                   {lines.length === 0 ? (
                     <Empty className="border-0 p-2">
@@ -516,7 +560,9 @@ export function VoiceCall() {
                         <EmptyMedia variant="icon">
                           <AlponaMark className="size-5" />
                         </EmptyMedia>
-                        <EmptyTitle className="text-[17px]">{t.empty.title}</EmptyTitle>
+                        <EmptyTitle className="text-[17px]">
+                          {t.empty.title}
+                        </EmptyTitle>
                         <EmptyDescription className="text-[13px] leading-[1.75]">
                           {t.empty.description}
                         </EmptyDescription>
@@ -534,7 +580,9 @@ export function VoiceCall() {
                         <LineItem
                           key={`${line.at}-${i}`}
                           line={line}
-                          speaker={line.who === "user" ? t.speaker.user : t.speaker.bot}
+                          speaker={
+                            line.who === "user" ? t.speaker.user : t.speaker.bot
+                          }
                         />
                       ))}
                     </ol>
@@ -544,7 +592,9 @@ export function VoiceCall() {
             </div>
 
             <CardFooter className="border-t border-border/70 bg-secondary/25 px-6 py-3.5">
-              <p className="text-[12px] leading-relaxed text-muted-foreground">{t.footer.tip}</p>
+              <p className="text-[12px] leading-relaxed text-muted-foreground">
+                {t.footer.tip}
+              </p>
             </CardFooter>
           </Card>
         </main>
@@ -554,7 +604,10 @@ export function VoiceCall() {
           <p className="flex items-center gap-1.5">
             <span>{t.footer.permission}</span>
             <span aria-hidden className="size-1 rounded-full bg-border" />
-            <span lang="en" className="font-mono text-[10.5px] uppercase tracking-[0.08em]">
+            <span
+              lang="en"
+              className="font-mono text-[10.5px] tracking-[0.08em] uppercase"
+            >
               WebRTC
             </span>
           </p>

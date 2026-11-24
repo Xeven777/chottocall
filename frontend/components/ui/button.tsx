@@ -10,13 +10,13 @@ const buttonVariants = cva(
         default:
           "bg-linear-to-t from-primary to-primary/80 text-primary-foreground shadow-[inset_0_1.2px_0_0_color-mix(in_oklch,var(--primary-foreground)_18%,transparent)] hover:bg-[color-mix(in_oklch,var(--primary),var(--foreground)_12%)]",
         outline:
-          "border-border bg-transparent text-foreground hover:border-primary/45 hover:bg-primary/[0.05] aria-expanded:border-primary/45 aria-expanded:bg-primary/[0.05]",
+          "border-border bg-transparent text-foreground hover:border-primary/45 hover:bg-primary/5 aria-expanded:border-primary/45 aria-expanded:bg-primary/5",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_6%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:
           "text-muted-foreground hover:bg-secondary hover:text-foreground aria-expanded:bg-secondary aria-expanded:text-foreground",
         destructive:
-          "border-destructive/25 bg-destructive/[0.07] text-destructive hover:border-destructive/35 hover:bg-destructive/[0.13] focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/[0.14] dark:hover:bg-destructive/[0.22] dark:focus-visible:ring-destructive/40",
+          "border-destructive/25 bg-destructive/[0.07] text-destructive hover:border-destructive/35 hover:bg-destructive/13 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/[0.14] dark:hover:bg-destructive/22 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

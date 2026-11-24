@@ -7,6 +7,8 @@ resolves its preference chain from :mod:`app.voice.settings` and raises
 chain can run, with a message naming what was tried.
 """
 
+from typing import Any
+
 from loguru import logger
 from pipecat.audio.vad.vad_analyzer import VADAnalyzer
 from pipecat.services.llm_service import LLMService
@@ -44,7 +46,7 @@ def build_stt(config: STTConfig) -> STTService:
     return stt_providers.resolve(config.providers, config)[1]
 
 
-def build_llm(config: LLMConfig, *, system_instruction: str = "") -> LLMService:
+def build_llm(config: LLMConfig, *, system_instruction: str = "") -> LLMService[Any]:
     """LLM service (``LLM_PROVIDER``), returning the first reachable provider."""
     return llm_providers.resolve(
         config.providers, config, system_instruction=system_instruction

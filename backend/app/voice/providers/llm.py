@@ -13,6 +13,8 @@ and is capped at ``LLM_MAX_TOKENS``: uncapped, a reasoning model generates
 thousands of tokens per turn — 45s+ of audio nobody hears.
 """
 
+from typing import Any
+
 import httpx
 from loguru import logger
 from pipecat.services.groq.llm import GroqLLMService
@@ -23,7 +25,10 @@ from pipecat.services.openai.llm import OpenAILLMService
 from app.voice.providers.base import ProviderRegistry
 from app.voice.settings import LLMConfig
 
-llm_providers: ProviderRegistry[LLMConfig, LLMService] = ProviderRegistry("LLM")
+# ``LLMService`` is generic over an invariant adapter type, so a concrete
+# service (OpenAI/Groq/Ollama) is not assignable to a bare ``LLMService``.
+# Pipecat's own signature uses ``LLMService[Any]`` for exactly this reason.
+llm_providers: ProviderRegistry[LLMConfig, LLMService[Any]] = ProviderRegistry("LLM")
 
 # Per-request "don't think". Newer llama.cpp builds read `enable_thinking`
 # straight from the (extra) request body, older ones only look inside
@@ -69,7 +74,7 @@ def _build_local(
     config: LLMConfig,
     system_instruction: str,
     **settings_extra,
-) -> LLMService:
+) -> LLMService[Any]:
     """Probe the server once and build its service.
 
     An unreachable server raises, and the registry moves to the next provider
@@ -95,7 +100,7 @@ def _build_local(
 
 
 @llm_providers.register("groq", available=lambda config: bool(config.groq_api_key))
-def build_groq(config: LLMConfig, *, system_instruction: str = "") -> LLMService:
+def build_groq(config: LLMConfig, *, system_instruction: str = "") -> LLMService[Any]:
     logger.info(f"LLM: groq model={config.groq_model} max_tokens={config.max_tokens}")
     return GroqLLMService(
         api_key=config.groq_api_key,
@@ -103,12 +108,13 @@ def build_groq(config: LLMConfig, *, system_instruction: str = "") -> LLMService
             model=config.groq_model,
             system_instruction=system_instruction,
             max_tokens=config.max_tokens,
+            reasoning_effort="low",
         ),
     )
 
 
 @llm_providers.register("llama.cpp")
-def build_llama_cpp(config: LLMConfig, *, system_instruction: str = "") -> LLMService:
+def build_llama_cpp(config: LLMConfig, *, system_instruction: str = "") -> LLMService[Any]:
     return _build_local(
         OpenAILLMService,
         "llama.cpp",
@@ -116,13 +122,12 @@ def build_llama_cpp(config: LLMConfig, *, system_instruction: str = "") -> LLMSe
         config.llama_cpp_model,
         config,
         system_instruction,
-        # Only llama.cpp understands these; Ollama's endpoint gets nothing extra.
         extra={"extra_body": dict(NO_THINKING)},
     )
 
 
 @llm_providers.register("ollama")
-def build_ollama(config: LLMConfig, *, system_instruction: str = "") -> LLMService:
+def build_ollama(config: LLMConfig, *, system_instruction: str = "") -> LLMService[Any]:
     return _build_local(
         OLLamaLLMService,
         "ollama",

@@ -6,6 +6,7 @@ import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
+from pipecat.observers.function_call_observer import FunctionCallObserver
 from pipecat.pipeline.worker import PipelineParams, PipelineWorker
 from pipecat.transports.base_transport import TransportParams
 from pipecat.transports.smallwebrtc.request_handler import (
@@ -37,6 +38,21 @@ handler = SmallWebRTCRequestHandler()
 _tasks: set[asyncio.Task] = set()
 
 
+def _tool_logger() -> FunctionCallObserver:
+    """Log every tool call at INFO: name, arguments, outcome, and how long it ran."""
+    observer = FunctionCallObserver(include_results=True)
+
+    @observer.event_handler("on_function_call_event")
+    async def on_function_call_event(_observer, event):
+        ran = f" ({event.timestamp - event.in_progress_at:.1f}s)" if event.in_progress_at else ""
+        logger.info(
+            f"tool {event.function_name} {event.kind}{ran}"
+            f" args={event.arguments} result={event.result} error={event.error}"
+        )
+
+    return observer
+
+
 async def run_bot(connection) -> None:
     transport = SmallWebRTCTransport(
         connection,
@@ -55,6 +71,7 @@ async def run_bot(connection) -> None:
     worker = PipelineWorker(
         pipeline,
         params=PipelineParams(enable_metrics=True),
+        observers=[_tool_logger()],
     )
 
     async def run() -> None:

@@ -7,6 +7,7 @@ the stages in the order they must run:
           -> output -> assistant aggregator
 """
 
+from pipecat.frames.frames import TTSSpeakFrame
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.processors.aggregators.llm_context import LLMContext
 from pipecat.processors.aggregators.llm_response_universal import (
@@ -35,8 +36,15 @@ from app.voice.settings import (
 from app.voice.tools import TOOLS
 
 SYSTEM = (
-    "তুমি চট্টোকল, একটি বন্ধুত্বপূর্ণ বাংলা ভয়েস সহকারী।সংক্ষেপে, এক-দুই বাক্যে, সহজ বাংলায় উত্তর দাও। ফোনে শোনার জন্য বলছ, তাই তালিকা, মার্কডাউন বা ইমোজি নয়। কোনো তথ্য দেখতে হলে আগে এক বাক্যে বলো যে দেখছ, তারপর টুল ব্যবহার করো।"
+    "তুমি চট্টোকল, একটি বন্ধুত্বপূর্ণ বাংলা ভয়েস সহকারী। "
+    "সংক্ষেপে, এক-দুই বাক্যে, সহজ বাংলায় উত্তর দাও। ফোনে শোনার জন্য বলছ, "
+    "তাই তালিকা, মার্কডাউন বা ইমোজি নয়।"
 )
+
+# Spoken the moment a tool starts, so the caller never hears dead air while it
+# runs. Deterministic: the model cannot skip it. If the model also says
+# something first, both are heard — keep this short.
+BRIDGING = "একটু দেখে নিচ্ছি।"
 
 
 def build_pipeline(transport: BaseTransport) -> Pipeline:
@@ -50,6 +58,14 @@ def build_pipeline(transport: BaseTransport) -> Pipeline:
         user_idle_timeout=turn.idle_timeout_s,
     )
     aggregators = LLMContextAggregatorPair(context, user_params=user_params)
+
+    llm = build_llm(LLMConfig.from_env(), system_instruction=SYSTEM)
+
+    # Fires once per tool batch, before the tool runs. Pushing straight to TTS
+    # keeps the acknowledgement independent of what the model chose to say.
+    @llm.event_handler("on_function_calls_started")
+    async def _acknowledge(service, function_calls):
+        await service.push_frame(TTSSpeakFrame(BRIDGING, append_to_context=False))
 
     return Pipeline(
         [
@@ -65,7 +81,7 @@ def build_pipeline(transport: BaseTransport) -> Pipeline:
             VADProcessor(vad_analyzer=build_vad(VADConfig.from_env())),
             build_stt(STTConfig.from_env()),
             aggregators.user(),
-            build_llm(LLMConfig.from_env(), system_instruction=SYSTEM),
+            llm,
             build_tts(TTSConfig.from_env()),
             transport.output(),
             aggregators.assistant(),

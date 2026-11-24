@@ -123,7 +123,7 @@ class TTSConfig:
             providers=_chain("TTS_PROVIDER", "tiny-swara,mithi,speechify"),
             tiny_swara_dir=_text("TTS_TINY_SWARA_DIR", "models/tiny-swara"),
             tiny_swara_model=_text("TTS_TINY_SWARA_MODEL"),
-            tiny_swara_voice=_text("TTS_TINY_SWARA_VOICE", "BF"),
+            tiny_swara_voice=_text("TTS_TINY_SWARA_VOICE", "BM"),
             tiny_swara_speed=_float("TTS_TINY_SWARA_SPEED", 1.0),
             mithi_model_dir=_text("TTS_MITHI_MODEL_DIR", "models/mithi-v2-flash"),
             mithi_voice=_text("TTS_MITHI_VOICE", "satvik"),
