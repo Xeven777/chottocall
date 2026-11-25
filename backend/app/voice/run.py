@@ -10,6 +10,7 @@ from pipecat.pipeline.worker import PipelineParams, PipelineWorker
 from pipecat.transports.local.audio import LocalAudioTransport, LocalAudioTransportParams
 from pipecat.workers.runner import WorkerRunner
 
+from app.knowledge.registry import load_disabled
 from app.voice.pipeline import build_pipeline
 
 
@@ -18,6 +19,7 @@ async def main() -> None:
         LocalAudioTransportParams(audio_in_enabled=True, audio_out_enabled=True)
     )
 
+    await load_disabled()
     latency = UserBotLatencyObserver()
 
     @latency.event_handler("on_latency_breakdown")

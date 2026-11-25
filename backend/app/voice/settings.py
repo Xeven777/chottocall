@@ -169,3 +169,34 @@ class TurnConfig:
 def barge_in_enabled() -> bool:
     """Half-duplex is the default; ``CHOTTO_BARGE_IN=1`` keeps the mic open."""
     return _text("CHOTTO_BARGE_IN", "0").lower() in {"1", "true", "yes", "on"}
+
+
+@dataclass(frozen=True, slots=True)
+class KnowledgeConfig:
+    """Postgres + local llama.cpp embeddings settings for the knowledge layer."""
+
+    database_url: str
+    embedding_base_url: str
+    embedding_model: str
+    embedding_dim: int
+    chunk_chars: int
+    candidate_k: int
+    top_k: int
+    min_score: float
+    rrf_k: int
+    upload_dir: str
+
+    @classmethod
+    def from_env(cls) -> "KnowledgeConfig":
+        return cls(
+            database_url=_text("DATABASE_URL"),
+            embedding_base_url=_text("EMBEDDING_BASE_URL", "http://127.0.0.1:8081/v1"),
+            embedding_model=_text("EMBEDDING_MODEL", "embeddinggemma-2"),
+            embedding_dim=_int("EMBEDDING_DIM", 512),
+            chunk_chars=_int("RAG_CHUNK_CHARS", 900),
+            candidate_k=_int("RAG_CANDIDATE_K", 20),
+            top_k=_int("RAG_TOP_K", 3),
+            min_score=_float("RAG_MIN_SCORE", 0.30),
+            rrf_k=_int("RAG_RRF_K", 60),
+            upload_dir=_text("RAG_UPLOAD_DIR", "data/uploads"),
+        )

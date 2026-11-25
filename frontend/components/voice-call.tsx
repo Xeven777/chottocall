@@ -38,10 +38,10 @@ import {
 import { Item, ItemContent, ItemGroup } from "@/components/ui/item"
 import { Kbd } from "@/components/ui/kbd"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { API_BASE_URL } from "@/lib/api"
 import { useLocale, type Copy, type Locale } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/+$/, "")
 const OFFER_URL = `${API_BASE_URL}/api/offer`
 
 type Status = "idle" | "connecting" | "live" | "error"

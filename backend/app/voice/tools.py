@@ -16,6 +16,8 @@ import asyncio
 
 from pipecat.adapters.llm.schemas.direct_function import tool_options
 
+from app.knowledge.retrieval import NO_ANSWER, search
+
 # shortcut: every body is a sleep plus a canned answer; swap in the real API/DB
 # call when these stop being demos, keeping the signature and the
 # ``params.result_callback`` call. The hardcoded facts are the other fake part.
@@ -73,4 +75,27 @@ async def find_nearest_branch(params, area: str):
     )
 
 
-TOOLS = [get_weather, check_order_status, book_appointment, find_nearest_branch]
+@tool_options(timeout_secs=10)
+async def search_knowledge(params, query: str):
+    """Search the knowledge base for an answer in Bengali.
+
+    Args:
+        query: What the caller is asking, in Bengali.
+    """
+    results = await search(query)
+    if not results:
+        await params.result_callback(NO_ANSWER)
+        return
+    # shortcut: source titles are not spoken — English filenames break the
+    # local G2P phoneme inventory. Add source chips via a transport message later.
+    answer = "\n\n".join(r["content"] for r in results)
+    await params.result_callback(answer)
+
+
+TOOLS = [
+    get_weather,
+    check_order_status,
+    book_appointment,
+    find_nearest_branch,
+    search_knowledge,
+]

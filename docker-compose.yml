@@ -1,4 +1,13 @@
 services:
+  embeddings:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    network_mode: host
+    volumes:
+      - ${EMBEDDING_MODEL_PATH:-/home/anish/apps/models/embeddinggemma-2-Q8_0.gguf}:/models/embedding.gguf:ro
+    command: >
+      --model /models/embedding.gguf --embedding --host 0.0.0.0 --port 8081 --ctx-size 2048
+    restart: unless-stopped
+
   backend:
     build: ./backend
     image: chottocall-backend
@@ -8,6 +17,8 @@ services:
     env_file: .env
     volumes:
       - ./backend/models:/app/models
+    depends_on:
+      - embeddings
     restart: unless-stopped
 
   frontend:

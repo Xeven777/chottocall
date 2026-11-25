@@ -26,6 +26,11 @@ dependencies = [
     "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
     "num2words>=0.5",
     "huggingface_hub>=0.26",
+    "pgvector>=0.5.1",
+    "sqlalchemy[asyncio]>=2.1.9",
+    "asyncpg>=0.32.0",
+    "python-multipart>=0.0.34",
+    "pypdfium2>=5.15.2",
 ]
 
 [tool.uv]

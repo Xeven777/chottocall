@@ -143,12 +143,40 @@ The agent should be able to:
 - Implement tool registry and execution.
 - Add structured outputs and validation.
 
-### Phase 4 — Frontend
-- Build voice interaction interface.
-- Add microphone controls.
-- Display live transcription.
-- Show agent responses and tool activity.
-- Add conversation history.
+### Phase 4
+
+Decisions
+Item	Choice
+DB	Your Neon chottocall database — put the URL in root .env as DATABASE_URL (gitignored; don't commit it)
+PDFs	≤10 MB → synchronous ingest, no job table
+Tools	Toggle only — enable/disable the existing 5 functions in tools.py
+Admin	No auth, local-only — with a shortcut: comment: add a token before exposing
+Orchestration	Pipecat only; no LangGraph
+Embeddings	EmbeddingGemma 2, text-only 270M, 512d
+Parsing	Docling → Markdown → sentence chunks
+Schema — simplified
+documents(id uuid pk, title text, source_uri text, content_hash text unique,
+          lang text default 'bn', created_at timestamptz)
+chunks(id uuid pk, document_id uuid fk, ordinal int, content text,
+       embedding halfvec(512), search tsvector, unique(document_id, ordinal))
+sessions(id uuid pk, started_at, ended_at, locale text)
+messages(id bigint pk, session_id fk, role text, text text,
+         sources jsonb, at timestamptz)
+tools(name text pk, enabled bool default true, updated_at timestamptz)
+HNSW on embedding, GIN on search + trigram on content. tools.name references the decorated functions — no webhook URLs, no SSRF surface.
+Admin pages (same Next.js app, shadcn-first)
+- Overview — stack list + live status (API, DB, embedding model, doc/chunk counts, provider chains)
+- Knowledge — file input, document table with delete dialog, ingest result toast
+- Tools — table of TOOLS with Switch bound to tools.enabled
+- Conversations — sessions table + transcript with source chips
+Components: Card, Badge, Table, Dialog, Switch, Skeleton, sonner. No new frontend deps. Read node_modules/next/dist/docs/ before writing Next.js code.
+Backend additions
+GET /api/admin/stack, POST/GET/DELETE /api/admin/knowledge, GET/PATCH /api/admin/tools, GET /api/admin/sessions. KnowledgeConfig dataclass in settings.py. Alembic migration #1 runs CREATE EXTENSION IF NOT EXISTS vector;.
+Build order
+1. Migration + config + ingest (prove retrieval on 10 Bengali questions first)
+2. Admin knowledge + overview
+3. Tool toggles
+4. Sessions/messages + conversations
 
 ### Phase 5 — Testing & Optimization
 - Test Bengali conversational accuracy.

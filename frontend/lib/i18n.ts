@@ -41,6 +41,26 @@ export type Copy = {
   empty: { title: string; description: string; trySaying: string; phrases: readonly string[] }
   speaker: { user: string; bot: string }
   footer: { tip: string; line: string; permission: string }
+  admin: {
+    title: string
+    back: string
+    overview: string
+    knowledge: string
+    tools: string
+    sessions: string
+    layer: string
+    name: string
+    status: string
+    documents: string
+    chunks: string
+    upload: string
+    uploadHint: string
+    delete: string
+    enabled: string
+    started: string
+    messages: string
+    empty: string
+  }
 }
 
 export const COPY: Record<Locale, Copy> = {
@@ -111,6 +131,26 @@ export const COPY: Record<Locale, Copy> = {
       line: "চট্টোকল — বাংলা ভাষায়, বাংলার জন্য।",
       permission: "মাইকের অনুমতি দরকার",
     },
+    admin: {
+      title: "অ্যাডমিন",
+      back: "কলে ফিরুন",
+      overview: "সংক্ষেপ",
+      knowledge: "জ্ঞান",
+      tools: "টুল",
+      sessions: "কল",
+      layer: "স্তর",
+      name: "নাম",
+      status: "অবস্থা",
+      documents: "নথি",
+      chunks: "অংশ",
+      upload: "ফাইল আপলোড করুন",
+      uploadHint: "পিডিএফ, মার্কডাউন বা টেক্সট — সর্বোচ্চ ১০ এমবি",
+      delete: "মুছুন",
+      enabled: "চালু",
+      started: "শুরু",
+      messages: "বার্তা",
+      empty: "কিছু নেই",
+    },
   },
   en: {
     docTitle: "ChottoCall — Speak in Bengali",
@@ -174,6 +214,26 @@ export const COPY: Record<Locale, Copy> = {
       tip: "Headphones help — the mic can hear the assistant itself.",
       line: "ChottoCall — Bengali, built for Bengali.",
       permission: "Microphone access required",
+    },
+    admin: {
+      title: "Admin",
+      back: "Back to call",
+      overview: "Overview",
+      knowledge: "Knowledge",
+      tools: "Tools",
+      sessions: "Calls",
+      layer: "Layer",
+      name: "Name",
+      status: "Status",
+      documents: "Documents",
+      chunks: "Chunks",
+      upload: "Upload a file",
+      uploadHint: "PDF, Markdown or text — up to 10 MB",
+      delete: "Delete",
+      enabled: "Enabled",
+      started: "Started",
+      messages: "Messages",
+      empty: "Nothing here yet",
     },
   },
 }

@@ -33,12 +33,16 @@ from app.voice.settings import (
     VADConfig,
     barge_in_enabled,
 )
-from app.voice.tools import TOOLS
+from app.knowledge.registry import enabled_tools
 
 SYSTEM = (
     "তুমি চট্টোকল, একটি বন্ধুত্বপূর্ণ বাংলা ভয়েস সহকারী। "
     "সংক্ষেপে, এক-দুই বাক্যে, সহজ বাংলায় উত্তর দাও। ফোনে শোনার জন্য বলছ, "
-    "তাই তালিকা, মার্কডাউন বা ইমোজি নয়।"
+    "তাই তালিকা, মার্কডাউন বা ইমোজি নয়। "
+    "তথ্যের প্রশ্নে search_knowledge টুল ব্যবহার করুন এবং টুলের পাঠ্য থেকে বাংলায় উত্তর দিন "
+    "(ইংরেজি হলে অনুবাদ করুন); ফাইলের নাম উচ্চারণ করবেন না। "
+    "টুল যদি কেবল 'আমার কাছে এই তথ্য নেই' বলে, তবেই সেটি বলুন; অন্যথায় 'তথ্য নেই' বলবেন না "
+    "এবং কোনো তথ্য বানাবেন না।"
 )
 
 # Spoken the moment a tool starts, so the caller never hears dead air while it
@@ -49,7 +53,7 @@ BRIDGING = "একটু দেখে নিচ্ছি।"
 
 def build_pipeline(transport: BaseTransport) -> Pipeline:
     """Assemble the pipeline around ``transport`` using the configured providers."""
-    context = LLMContext(tools=TOOLS)
+    context = LLMContext(tools=enabled_tools())
     turn = build_turn(TurnConfig.from_env())
     user_params = LLMUserAggregatorParams(
         user_turn_strategies=turn.strategies,
