@@ -13,6 +13,8 @@ export type Copy = {
   tagline: string
   headline: string
   intro: string
+  stageLabel: string
+  orbHint: string
   switchLanguage: string
   start: string
   startAria: string
@@ -84,6 +86,8 @@ export const COPY: Record<Locale, Copy> = {
     headline: "বাংলায় কথা বলুন",
     intro:
       "মাইক খুলে স্বাভাবিকভাবে বলুন। সে বাংলাতেই উত্তর দেবে — আর নিচে কথাগুলো লেখা থাকবে।",
+    stageLabel: "লাইভ ভয়েস",
+    orbHint: "অর্বে চাপ দিয়ে শুরু করুন",
     switchLanguage: "ভাষা বদলান",
     start: "কথা শুরু করুন",
     startAria: "কল শুরু করুন",
@@ -195,6 +199,8 @@ export const COPY: Record<Locale, Copy> = {
     headline: "Speak in Bengali",
     intro:
       "Open the mic and talk naturally. It answers in Bengali, and every line lands below.",
+    stageLabel: "Live voice",
+    orbHint: "Tap the flower orb to start",
     switchLanguage: "Switch language",
     start: "Start the call",
     startAria: "Start the call",
@@ -268,7 +274,7 @@ export const COPY: Record<Locale, Copy> = {
     },
     speaker: { user: "You", bot: "ChottoCall" },
     footer: {
-      tip: "Headphones help — the mic can hear the assistant itself.",
+      tip: "Headphones will give you a better experience.",
       line: "ChottoCall — Bengali, built for Bengali.",
       permission: "Microphone access required",
     },

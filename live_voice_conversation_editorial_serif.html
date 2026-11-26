@@ -1,0 +1,358 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phulbon Voice — Live Conversation (Editorial Serif)</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">/** @type {import('tailwindcss').Config} */
+globalThis.tailwind = globalThis.tailwind || {};
+globalThis.tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        'crimson-deep': '#750005',
+        'alta-red': '#9E0B0F',
+        'marigold-gold': '#E59819',
+        'saffron-glow': '#FFAE32',
+        'cream-petal': '#FFEEDD',
+        'mahogany-deep': '#2A1614',
+        'light-primary': '#750005',
+        'light-on-primary': '#FFFFFF',
+        'light-primary-container': '#9E0B0F',
+        'light-on-primary-container': '#FFE5E2',
+        'light-secondary': '#845400',
+        'light-on-secondary': '#FFFFFF',
+        'light-secondary-container': '#FFAE32',
+        'light-on-secondary-container': '#3B2200',
+        'light-tertiary': '#003475',
+        'light-on-tertiary': '#FFFFFF',
+        'light-tertiary-container': '#004AA1',
+        'light-on-tertiary-container': '#DCE7FF',
+        'light-error': '#BA1A1A',
+        'light-on-error': '#FFFFFF',
+        'light-error-container': '#FFDAD6',
+        'light-on-error-container': '#93000A',
+        'light-background': '#FFF8F7',
+        'light-on-background': '#2A1614',
+        'light-surface': '#FFF8F7',
+        'light-surface-dim': '#F6D2CE',
+        'light-surface-bright': '#FFF8F7',
+        'light-surface-container-lowest': '#FFFFFF',
+        'light-surface-container-low': '#FFF0EF',
+        'light-surface-container': '#FFE9E6',
+        'light-surface-container-high': '#FFE2DE',
+        'light-surface-container-highest': '#FFDAD6',
+        'light-on-surface': '#2A1614',
+        'light-surface-variant': '#FFDAD5',
+        'light-on-surface-variant': '#5B403D',
+        'light-outline': '#8F706C',
+        'light-outline-variant': '#E3BEB9',
+        'light-inverse-surface': '#412B28',
+        'light-inverse-on-surface': '#FFEDEA',
+        'light-inverse-primary': '#FFB4AA',
+        'dark-primary': '#FFB4AA',
+        'dark-on-primary': '#690004',
+        'dark-primary-container': '#9E0B0F',
+        'dark-on-primary-container': '#FFE5E2',
+        'dark-secondary': '#FFB959',
+        'dark-on-secondary': '#462B00',
+        'dark-secondary-container': '#D68B02',
+        'dark-on-secondary-container': '#2B1900',
+        'dark-tertiary': '#ADC6FF',
+        'dark-on-tertiary': '#002E69',
+        'dark-tertiary-container': '#004AA1',
+        'dark-on-tertiary-container': '#DCE7FF',
+        'dark-error': '#FFB4AB',
+        'dark-on-error': '#690005',
+        'dark-error-container': '#93000A',
+        'dark-on-error-container': '#FFDAD6',
+        'dark-background': '#210E0C',
+        'dark-on-background': '#FFDAD6',
+        'dark-surface': '#210E0C',
+        'dark-surface-dim': '#210E0C',
+        'dark-surface-bright': '#4B3331',
+        'dark-surface-container-lowest': '#1B0908',
+        'dark-surface-container-low': '#2A1614',
+        'dark-surface-container': '#2F1A18',
+        'dark-surface-container-high': '#3A2422',
+        'dark-surface-container-highest': '#462F2C',
+        'dark-on-surface': '#FFDAD6',
+        'dark-surface-variant': '#5B403D',
+        'dark-on-surface-variant': '#E3BEB9',
+        'dark-outline': '#AA8985',
+        'dark-outline-variant': '#5B403D',
+        'dark-inverse-surface': '#FFDAD6',
+        'dark-inverse-on-surface': '#412B28',
+        'dark-inverse-primary': '#B7221E',
+      },
+      borderRadius: {
+        'sm': '6px',
+        'DEFAULT': '12px',
+        'md': '16px',
+        'lg': '20px',
+        'xl': '28px',
+        'full': '9999px',
+      },
+      spacing: {
+        'gutter-xs': '4px',
+        'gutter-sm': '8px',
+        'gutter-md': '16px',
+        'gutter-lg': '24px',
+        'gutter-xl': '32px',
+        'section': '48px',
+        'page-margin': '24px',
+      },
+      fontFamily: {
+        'display': ['"Newsreader"', 'sans-serif'],
+        'headline': ['"Newsreader"', 'sans-serif'],
+        'title': ['"Libertinus Sans"', 'sans-serif'],
+        'body': ['"Libertinus Sans"', 'sans-serif'],
+        'label': ['"Libertinus Sans"', 'sans-serif'],
+        'mono': ['"Source Code Pro"', 'monospace'],
+      },
+      fontSize: {
+        'display-lg': ['44px', { lineHeight: '50px', letterSpacing: '-0.5px', fontWeight: '700' }],
+        'display-lg-mobile': ['32px', { lineHeight: '38px', letterSpacing: '-0.25px', fontWeight: '700' }],
+        'headline-lg': ['34px', { lineHeight: '42px', letterSpacing: '-0.25px', fontWeight: '600' }],
+        'headline-lg-mobile': ['26px', { lineHeight: '32px', letterSpacing: '-0.2px', fontWeight: '600' }],
+        'headline-md': ['24px', { lineHeight: '30px', letterSpacing: '0px', fontWeight: '600' }],
+        'title-lg': ['20px', { lineHeight: '28px', letterSpacing: '0px', fontWeight: '600' }],
+        'title-md': ['16px', { lineHeight: '24px', letterSpacing: '0.1px', fontWeight: '600' }],
+        'body-lg': ['16px', { lineHeight: '24px', letterSpacing: '0.15px', fontWeight: '400' }],
+        'body-md': ['14px', { lineHeight: '21px', letterSpacing: '0.15px', fontWeight: '400' }],
+        'label-lg': ['14px', { lineHeight: '20px', letterSpacing: '0.1px', fontWeight: '500' }],
+        'label-sm': ['12px', { lineHeight: '16px', letterSpacing: '0.2px', fontWeight: '500' }],
+        'mono-sm': ['12px', { lineHeight: '16px', letterSpacing: '0.3px', fontWeight: '500' }],
+      },
+      transitionDuration: {
+        'state-change': '120ms',
+        'surface-enter': '280ms',
+        'surface-exit': '180ms',
+        'orb-breathe': '2400ms',
+      },
+      transitionDelay: {
+        'state-change': '0ms',
+        'surface-enter': '0ms',
+        'surface-exit': '0ms',
+        'orb-breathe': '0ms',
+      },
+      transitionTimingFunction: {
+        'state-change': 'ease-out',
+        'surface-enter': 'cubic-bezier(0.2, 0, 0, 1)',
+        'surface-exit': 'cubic-bezier(0.3, 0, 1, 1)',
+        'orb-breathe': 'cubic-bezier(0.4, 0, 0.2, 1)',
+      },
+    },
+  },
+};
+if (typeof module !== 'undefined') module.exports = globalThis.tailwind.config;
+</script>
+  <script>
+    globalThis.tailwind.config.theme.extend.fontFamily = {
+      'display': ['"Cormorant Garamond"', 'serif'],
+      'headline': ['"Cormorant Garamond"', 'serif'],
+      'title': ['"Lato"', 'sans-serif'],
+      'body': ['"Lato"', 'sans-serif'],
+      'label': ['"Lato"', 'sans-serif'],
+      'mono': ['"Source Code Pro"', 'monospace']
+    };
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&amp;family=Lato:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;500;600;700&amp;family=Source+Code+Pro:wght@500&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet">
+  <style>
+    .material-symbols-outlined, .material-symbols-rounded, .material-symbols-sharp, .material-icons {
+      display: inline-block; width: 1em; height: 1em; line-height: 1 !important;
+      box-sizing: content-box; overflow: hidden; white-space: nowrap; direction: ltr; vertical-align: middle;
+    }
+    .voice-stage-gradient-desktop {
+      background-image:
+        radial-gradient(circle at 46% 42%, rgba(255, 174, 50, 0.34) 0%, rgba(158, 11, 15, 0.25) 38%, transparent 68%),
+        linear-gradient(155deg, #2A1614 0%, #750005 55%, #9E0B0F 100%);
+    }
+    .orb-halo {
+      background-image: radial-gradient(circle, rgba(255, 174, 50, 0.44) 0%, rgba(158, 11, 15, 0.28) 54%, transparent 72%);
+    }
+    @keyframes gentleBreathe {
+      0%, 100% { transform: scale(1); opacity: 0.92; }
+      50% { transform: scale(1.06); opacity: 1; }
+    }
+    .orb-breathing {
+      animation: gentleBreathe 2400ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .orb-breathing { animation: none; }
+    }
+  </style>
+</head>
+<body class="bg-light-surface text-light-on-surface font-body antialiased">
+  <div class="min-h-[1024px] flex bg-light-surface" data-stitch-vh="min-h-[1024px]===min-h-screen">
+
+    <!-- Persistent Left Navigation Rail (exact shell parity with AssistantHomeDesktop) -->
+    <aside class="hidden md:flex w-60 shrink-0 min-h-[1024px] bg-light-surface-container-low border-r border-light-outline-variant/50 p-gutter-lg flex-col justify-between" data-stitch-vh="min-h-[1024px]===min-h-screen">
+      <div class="flex flex-col gap-gutter-xl">
+        <div class="flex items-center gap-gutter-sm">
+          <div class="w-11 h-11 rounded-md bg-gradient-to-br from-alta-red to-crimson-deep flex items-center justify-center shadow-sm">
+            <svg viewBox="0 0 64 64" class="w-7 h-7" aria-hidden="true">
+              <defs>
+                <radialGradient id="petalGradDesktopLive" cx="50%" cy="50%" r="55%">
+                  <stop offset="0%" stop-color="#FFAE32"></stop>
+                  <stop offset="55%" stop-color="#FFEEDD"></stop>
+                  <stop offset="100%" stop-color="#FFF8F7"></stop>
+                </radialGradient>
+              </defs>
+              <g fill="url(#petalGradDesktopLive)">
+                <path d="M32 32 C26 20, 26 8, 32 6 C38 8, 38 20, 32 32 Z" transform="rotate(0 32 32)"></path>
+                <path d="M32 32 C26 20, 26 8, 32 6 C38 8, 38 20, 32 32 Z" transform="rotate(72 32 32)"></path>
+                <path d="M32 32 C26 20, 26 8, 32 6 C38 8, 38 20, 32 32 Z" transform="rotate(144 32 32)"></path>
+                <path d="M32 32 C26 20, 26 8, 32 6 C38 8, 38 20, 32 32 Z" transform="rotate(216 32 32)"></path>
+                <path d="M32 32 C26 20, 26 8, 32 6 C38 8, 38 20, 32 32 Z" transform="rotate(288 32 32)"></path>
+              </g>
+            </svg>
+          </div>
+          <div class="flex flex-col">
+            <span class="font-title text-title-md text-light-on-surface" data-design-text-token="title-md">Phulbon</span>
+            <span class="font-label text-label-sm text-light-on-surface-variant" data-design-text-token="label-sm">ফুলবন ভয়েস</span>
+          </div>
+        </div>
+
+        <nav aria-label="Main navigation" class="flex flex-col gap-gutter-xs">
+          <a href="../voice-home-desktop/AssistantHomeDesktop.html" class="flex items-center gap-gutter-sm px-gutter-md py-gutter-sm rounded-full text-light-on-surface-variant hover:bg-light-surface-container transition-colors">
+            <span class="material-symbols-outlined">home</span>
+            <span class="font-label text-label-lg" data-design-text-token="label-lg">Home</span>
+          </a>
+          <a href="LiveVoiceDesktopEditorial.html" class="flex items-center gap-gutter-sm px-gutter-md py-gutter-sm rounded-full bg-gradient-to-r from-alta-red to-crimson-deep text-light-on-primary shadow-sm">
+            <span class="material-symbols-outlined" style="font-variation-settings: &#39;FILL&#39; 1;">graphic_eq</span>
+            <span class="font-label text-label-lg" data-design-text-token="label-lg">Live Voice</span>
+          </a>
+          <a href="#transcripts" class="flex items-center gap-gutter-sm px-gutter-md py-gutter-sm rounded-full text-light-on-surface-variant hover:bg-light-surface-container transition-colors">
+            <span class="material-symbols-outlined">history</span>
+            <span class="font-label text-label-lg" data-design-text-token="label-lg">Transcripts</span>
+          </a>
+          <a href="#preferences" class="flex items-center gap-gutter-sm px-gutter-md py-gutter-sm rounded-full text-light-on-surface-variant hover:bg-light-surface-container transition-colors">
+            <span class="material-symbols-outlined">tune</span>
+            <span class="font-label text-label-lg" data-design-text-token="label-lg">Preferences</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="rounded-lg bg-light-surface-container p-gutter-md flex items-center gap-gutter-sm">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-alta-red to-crimson-deep text-light-on-primary flex items-center justify-center font-title text-title-md">
+          A
+        </div>
+        <div class="flex flex-col min-w-0">
+          <span class="font-label text-label-lg text-light-on-surface" data-design-text-token="label-lg">Ananya Sen</span>
+          <span class="font-label text-label-sm text-light-on-surface-variant" data-design-text-token="label-sm">Kolkata · IST</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Immersive Voice Stage -->
+    <main class="flex-1 min-h-[1024px] voice-stage-gradient-desktop text-light-on-primary p-gutter-xl flex flex-col justify-between" data-stitch-vh="min-h-[1024px]===min-h-screen">
+
+      <!-- Top Session Header -->
+      <header class="flex flex-wrap items-center justify-between gap-gutter-md">
+        <div class="flex flex-col gap-gutter-xs">
+          <h1 class="font-headline text-headline-lg text-light-on-primary" data-design-text-token="headline-lg">Live voice conversation</h1>
+          <span class="font-mono text-mono-sm text-cream-petal tabular-nums" data-design-text-token="mono-sm">Session 01:24 · Bilingual Bangla &amp; English</span>
+        </div>
+
+        <div class="flex items-center gap-gutter-sm">
+          <button data-component-id="chip-filter-gold" data-component-type="chip" data-component-variant="filter" aria-pressed="true" type="button" class="inline-flex items-center gap-gutter-xs px-gutter-md py-gutter-sm rounded-full bg-gradient-to-r from-saffron-glow to-marigold-gold text-mahogany-deep shadow-sm">
+            <span class="font-label text-label-sm" data-design-text-token="label-sm">বাংলা + EN</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Center Split: Floral Voice Orb + Live Transcript -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-gutter-xl items-center my-auto py-gutter-lg">
+
+        <!-- Left: Floral Voice Orb -->
+        <div class="lg:col-span-6 flex flex-col items-center justify-center gap-gutter-lg">
+          <div class="relative flex items-center justify-center w-72 h-72">
+            <div class="absolute inset-0 rounded-full orb-halo orb-breathing"></div>
+            <button type="button" aria-label="Phulbon voice orb" class="relative w-52 h-52 rounded-full bg-gradient-to-br from-alta-red via-crimson-deep to-mahogany-deep border border-saffron-glow/40 shadow-2xl flex items-center justify-center transition-transform duration-state-change ease-state-change active:scale-95">
+              <svg viewBox="0 0 120 120" class="w-32 h-32" aria-hidden="true">
+                <defs>
+                  <radialGradient id="desktopLiveFlower" cx="50%" cy="50%" r="58%">
+                    <stop offset="0%" stop-color="#FFAE32"></stop>
+                    <stop offset="55%" stop-color="#FFEEDD"></stop>
+                    <stop offset="100%" stop-color="#FFF8F7"></stop>
+                  </radialGradient>
+                </defs>
+                <g fill="url(#desktopLiveFlower)">
+                  <path d="M60 60 C46 36, 46 14, 60 10 C74 14, 74 36, 60 60 Z" transform="rotate(0 60 60)"></path>
+                  <path d="M60 60 C46 36, 46 14, 60 10 C74 14, 74 36, 60 60 Z" transform="rotate(72 60 60)"></path>
+                  <path d="M60 60 C46 36, 46 14, 60 10 C74 14, 74 36, 60 60 Z" transform="rotate(144 60 60)"></path>
+                  <path d="M60 60 C46 36, 46 14, 60 10 C74 14, 74 36, 60 60 Z" transform="rotate(216 60 60)"></path>
+                  <path d="M60 60 C46 36, 46 14, 60 10 C74 14, 74 36, 60 60 Z" transform="rotate(288 60 60)"></path>
+                </g>
+              </svg>
+            </button>
+          </div>
+          <div class="flex flex-col items-center gap-gutter-xs text-center">
+            <span id="desktop-voice-status" class="font-title text-title-lg text-cream-petal" data-design-text-token="title-lg">Listening in Bengali &amp; English...</span>
+            <span class="font-body text-body-md text-cream-petal/90" data-design-text-token="body-md">Speak naturally; switch languages mid-sentence anytime.</span>
+          </div>
+        </div>
+
+        <!-- Right: Live Bilingual Transcript Card -->
+        <div class="lg:col-span-6 rounded-xl bg-mahogany-deep/60 border border-cream-petal/15 p-gutter-lg flex flex-col gap-gutter-md">
+          <div class="flex items-center justify-between border-b border-cream-petal/15 pb-gutter-sm">
+            <span class="font-title text-title-md text-light-on-primary" data-design-text-token="title-md">Live transcript</span>
+            <span class="font-mono text-mono-sm text-cream-petal tabular-nums" data-design-text-token="mono-sm">Auto-detect</span>
+          </div>
+
+          <div class="flex flex-col gap-gutter-md">
+            <div class="self-end max-w-md rounded-lg bg-mahogany-deep/70 border border-cream-petal/20 px-gutter-md py-gutter-sm">
+              <span class="font-label text-label-sm text-cream-petal block mb-gutter-xs" data-design-text-token="label-sm">You · 09:05 AM</span>
+              <p class="font-body text-body-md text-light-on-primary text-pretty" data-design-text-token="body-md">
+                &#34;আজ বিকেলে কলকাতার আবহাওয়া কেমন থাকবে? আর সন্ধ্যার জন্য রবীন্দ্রসঙ্গীত চালিয়ে দাও।&#34;
+              </p>
+            </div>
+
+            <div class="self-start max-w-md rounded-lg bg-light-surface-container-lowest text-light-on-surface px-gutter-md py-gutter-sm shadow-md">
+              <span class="font-label text-label-sm text-light-primary block mb-gutter-xs" data-design-text-token="label-sm">Phulbon · 09:05 AM</span>
+              <p class="font-body text-body-md text-light-on-surface text-pretty" data-design-text-token="body-md">
+                This afternoon in Kolkata will be pleasant at 26°C with a gentle breeze. I have queued your calm evening Rabindra Sangeet playlist for 6:00 PM.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bottom Dock Controls -->
+      <footer class="flex items-center justify-center gap-gutter-lg pt-gutter-sm">
+        <button id="desktop-mute-btn" data-component-id="button-icon" data-component-type="button" data-component-variant="icon" type="button" aria-label="Mute microphone" class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-cream-petal/15 text-light-on-primary hover:bg-cream-petal/25 active:scale-95 transition-transform duration-state-change ease-state-change">
+          <span class="material-symbols-outlined">mic</span>
+        </button>
+
+        <a href="../voice-home-desktop/AssistantHomeDesktop.html" data-component-id="button-icon-destructive" data-component-type="button" data-component-variant="destructive" aria-label="End conversation" class="inline-flex items-center justify-center gap-gutter-sm px-gutter-xl h-14 rounded-full bg-gradient-to-r from-saffron-glow to-marigold-gold text-mahogany-deep shadow-lg hover:opacity-95 active:scale-95 transition-transform duration-state-change ease-state-change">
+          <span class="material-symbols-outlined" aria-hidden="true">call_end</span>
+          <span class="font-label text-label-lg" data-design-text-token="label-lg">End call</span>
+        </a>
+
+        <button data-component-id="button-icon-keyboard" data-component-type="button" data-component-variant="icon" type="button" aria-label="Type message instead" class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-cream-petal/15 text-light-on-primary hover:bg-cream-petal/25 active:scale-95 transition-transform duration-state-change ease-state-change">
+          <span class="material-symbols-outlined">keyboard</span>
+        </button>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      var muteBtn = document.getElementById('desktop-mute-btn');
+      var statusEl = document.getElementById('desktop-voice-status');
+      var muted = false;
+      if (muteBtn && statusEl) {
+        muteBtn.addEventListener('click', function () {
+          muted = !muted;
+          var icon = muteBtn.querySelector('.material-symbols-outlined');
+          if (icon) icon.textContent = muted ? 'mic_off' : 'mic';
+          statusEl.textContent = muted ? 'Microphone muted' : 'Listening in Bengali & English...';
+        });
+      }
+    })();
+  </script>
+
+
+</body></html>

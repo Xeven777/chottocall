@@ -246,10 +246,7 @@ export function SessionsTab() {
                                 {open.messages.map((message) => {
                                   const isUser = message.role === "user"
                                   return (
-                                    <li
-                                      key={message.id}
-                                      className="flex gap-3"
-                                    >
+                                    <li key={message.id} className="flex gap-3">
                                       <span
                                         className={cn(
                                           "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full",

@@ -40,7 +40,8 @@ const itemVariants = cva(
     variants: {
       variant: {
         default: "border-transparent",
-        outline: "border-border/80 bg-transparent hover:border-primary/30 hover:bg-primary/[0.035]",
+        outline:
+          "border-border/80 bg-transparent hover:border-primary/30 hover:bg-primary/[0.035]",
         muted: "border-transparent bg-secondary/60",
       },
       size: {

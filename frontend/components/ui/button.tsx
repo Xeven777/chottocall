@@ -3,12 +3,15 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-[background-color,border-color,color,transform] duration-200 ease-out outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25 active:not-aria-[haspopup]:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-[background-color,border-color,color,transform,box-shadow] duration-200 ease-out-soft outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25 active:not-aria-[haspopup]:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
         default:
-          "bg-linear-to-t from-primary to-primary/80 text-primary-foreground shadow-[inset_0_1.2px_0_0_color-mix(in_oklch,var(--primary-foreground)_18%,transparent)] hover:bg-[color-mix(in_oklch,var(--primary),var(--foreground)_12%)]",
+          "bg-linear-to-b from-alta to-crimson text-primary-foreground shadow-[inset_0_1.2px_0_0_color-mix(in_oklch,var(--brand-cream)_22%,transparent),0_10px_26px_-16px_color-mix(in_oklch,var(--brand-crimson)_85%,transparent)] hover:from-alta/92 hover:to-crimson/92",
+        gold: "bg-linear-to-r from-saffron to-marigold text-mahogany shadow-[inset_0_1px_0_0_color-mix(in_oklch,var(--brand-cream)_55%,transparent),0_12px_30px_-16px_color-mix(in_oklch,var(--brand-marigold)_85%,transparent)] hover:from-saffron/94 hover:to-marigold/94",
+        glass:
+          "border-cream/20 bg-cream/12 text-cream backdrop-blur-[2px] hover:border-cream/30 hover:bg-cream/20",
         outline:
           "border-border bg-transparent text-foreground hover:border-primary/45 hover:bg-primary/5 aria-expanded:border-primary/45 aria-expanded:bg-primary/5",
         secondary:
