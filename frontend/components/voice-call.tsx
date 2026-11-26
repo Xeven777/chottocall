@@ -6,6 +6,8 @@ import { SmallWebRTCTransport } from "@pipecat-ai/small-webrtc-transport"
 import { ThinkingOrb, type OrbState } from "thinking-orbs"
 import { useTheme } from "next-themes"
 import {
+  ArrowDown,
+  ChatCircleDots,
   Microphone,
   MicrophoneSlash,
   Moon,
@@ -13,6 +15,7 @@ import {
   Sun,
   WarningCircle,
   Waveform,
+  X,
 } from "@phosphor-icons/react"
 
 import { AlponaMark, AlponaRing, AlponaRule } from "@/components/alpona"
@@ -35,9 +38,16 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
-import { Item, ItemContent, ItemGroup } from "@/components/ui/item"
 import { Kbd } from "@/components/ui/kbd"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Message, MessageAvatar, MessageContent, MessageHeader } from "@/components/ui/message"
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from "@/components/ui/message-scroller"
 import { API_BASE_URL } from "@/lib/api"
 import { useLocale, type Copy, type Locale } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
@@ -45,7 +55,7 @@ import { cn } from "@/lib/utils"
 const OFFER_URL = `${API_BASE_URL}/api/offer`
 
 type Status = "idle" | "connecting" | "live" | "error"
-type Line = { who: "user" | "bot"; text: string; at: number }
+type Line = { id: string; who: "user" | "bot"; text: string; at: number }
 type CallError = { code: "playback" } | { code: "connection"; detail?: string }
 
 const DOT_CLASS: Record<Status, string> = {
@@ -75,7 +85,7 @@ const CallTimer = memo(function CallTimer() {
     return () => window.clearInterval(id)
   }, [])
   return (
-    <span lang="en" className="font-mono text-[11px] tabular-nums text-muted-foreground">
+    <span lang="en" className="font-mono text-[11.5px] tabular-nums text-muted-foreground">
       {formatClock(s)}
     </span>
   )
@@ -85,7 +95,7 @@ const StatusDot = memo(function StatusDot({ status }: { status: Status }) {
   return (
     <span className="relative flex size-1.5">
       {status === "live" && (
-        <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-60" />
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-60 motion-reduce:hidden" />
       )}
       <span className={cn("relative inline-flex size-1.5 rounded-full", DOT_CLASS[status])} />
     </span>
@@ -94,17 +104,19 @@ const StatusDot = memo(function StatusDot({ status }: { status: Status }) {
 
 const ThemeToggle = memo(function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   const dark = resolvedTheme === "dark"
   const toggle = useCallback(() => setTheme(dark ? "light" : "dark"), [dark, setTheme])
   return (
     <Button
       variant="ghost"
-      size="icon-sm"
+      size="icon"
       className="rounded-full"
-      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={mounted ? (dark ? "Switch to light mode" : "Switch to dark mode") : "Toggle theme"}
       onClick={toggle}
     >
-      {dark ? <Sun size={16} /> : <Moon size={16} />}
+      {mounted && dark ? <Sun size={16} /> : <Moon size={16} />}
     </Button>
   )
 })
@@ -122,7 +134,7 @@ const LangToggle = memo(function LangToggle({
     <div
       role="group"
       aria-label={label}
-      className="flex h-7 shrink-0 items-center gap-0.5 rounded-md border border-border/80 bg-card/60 p-0.5"
+      className="flex h-9 shrink-0 items-center gap-0.5 rounded-md border border-border/80 bg-card/60 p-0.5"
     >
       {(["bn", "en"] as const).map((option) => (
         <button
@@ -132,7 +144,7 @@ const LangToggle = memo(function LangToggle({
           aria-pressed={locale === option}
           onClick={() => onChange(option)}
           className={cn(
-            "h-5.5 rounded-sm px-2 text-[11px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+            "h-7 min-w-11 rounded-sm px-2.5 text-[11.5px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/40 active:scale-[0.97]",
             locale === option
               ? "bg-primary text-primary-foreground"
               : "text-muted-foreground hover:text-foreground"
@@ -181,7 +193,7 @@ const CallActions = memo(function CallActions({
           size="lg"
           variant="destructive"
           onClick={onStop}
-          className="h-12 flex-1 text-[15px]"
+          className="h-12 flex-1 border-transparent bg-destructive text-[15px] text-primary-foreground hover:bg-destructive/90"
           aria-label={t.end}
         >
           <PhoneDisconnect size={18} weight="fill" />
@@ -213,7 +225,7 @@ const CallActions = memo(function CallActions({
     >
       {connecting ? (
         <>
-          <Waveform size={18} className="animate-pulse" />
+          <Waveform size={18} className="animate-pulse motion-reduce:animate-none" />
           {t.connecting}
         </>
       ) : (
@@ -233,41 +245,60 @@ const LineItem = memo(function LineItem({ line, speaker }: { line: Line; speaker
     [line.at]
   )
   return (
-    <li className={cn("msg-in group/line", isUser && "text-right")}>
-      <div className={cn("flex items-center gap-2 text-muted-foreground", isUser && "justify-end")}>
-        <span
-          className={cn("text-[11px] tracking-[0.06em]", isUser ? "text-muted-foreground" : "text-primary")}
-        >
-          {speaker}
-        </span>
-        <span aria-hidden className="h-px w-3.5 bg-border" />
-        <time lang="en" className="font-mono text-[10.5px] tabular-nums">
-          {time}
-        </time>
-      </div>
-      <p
+    <Message align={isUser ? "end" : "start"} className="msg-in">
+      <MessageAvatar
         className={cn(
-          "mt-1.5 text-[15px] leading-[1.75] wrap-anywhere",
-          isUser ? "border-r-2 border-primary/40 pr-3.5" : "border-l-2 border-primary/40 pl-3.5"
+          "mt-0.5 size-7 self-start border bg-card text-primary",
+          isUser ? "border-primary/20 bg-primary/10" : "border-border/70"
         )}
       >
-        {line.text}
-      </p>
-    </li>
+        {isUser ? <Microphone size={14} weight="bold" /> : <AlponaMark className="size-4" />}
+      </MessageAvatar>
+      <div className={cn("flex min-w-0 max-w-[min(86%,44ch)] flex-col", isUser && "items-end")}>
+        <MessageHeader className="gap-2 px-1 text-[11.5px] font-normal">
+          <span className={cn("tracking-[0.06em]", !isUser && "text-primary")}>{speaker}</span>
+          <time lang="en" className="font-mono text-[10.5px] tabular-nums">
+            {time}
+          </time>
+        </MessageHeader>
+        <MessageContent
+          className={cn(
+            "rounded-2xl px-3.5 py-2.5 text-[14.5px] leading-[1.7] wrap-anywhere",
+            isUser
+              ? "rounded-tr-sm bg-primary text-primary-foreground"
+              : "rounded-tl-sm border border-border/70 bg-card text-foreground shadow-xs"
+          )}
+        >
+          {line.text}
+        </MessageContent>
+      </div>
+    </Message>
   )
 })
 
-const TrySayingList = memo(function TrySayingList({ t }: { t: Copy }) {
+const TrySayingList = memo(function TrySayingList({
+  t,
+  onSelect,
+}: {
+  t: Copy
+  onSelect: (phrase: string) => void
+}) {
   return (
-    <ItemGroup className="w-full gap-2 text-left">
+    <div className="flex w-full flex-wrap gap-2 text-left">
       {t.empty.phrases.map((phrase) => (
-        <Item key={phrase} variant="outline" size="xs">
-          <ItemContent>
-            <span className="text-[13.5px] leading-relaxed text-foreground/85">{phrase}</span>
-          </ItemContent>
-        </Item>
+        <Button
+          key={phrase}
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onSelect(phrase)}
+          className="h-8 rounded-full border-border/80 bg-card/60 px-3.5 text-[12.5px] font-normal text-foreground/85 hover:border-primary/45 hover:bg-primary/5"
+        >
+          <ChatCircleDots size={13} />
+          {phrase}
+        </Button>
       ))}
-    </ItemGroup>
+    </div>
   )
 })
 
@@ -275,15 +306,18 @@ export function VoiceCall() {
   const { locale, setLocale, t } = useLocale()
   const clientRef = useRef<PipecatClient | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const scrollWrapRef = useRef<HTMLDivElement | null>(null)
 
   const [status, setStatus] = useState<Status>("idle")
   const [error, setError] = useState<CallError | null>(null)
   const [lines, setLines] = useState<Line[]>([])
   const [muted, setMuted] = useState(false)
+  const [prompt, setPrompt] = useState<string | null>(null)
 
-  const addLine = useCallback((line: Omit<Line, "at">) => {
-    setLines((prev) => [...prev.slice(-30), { ...line, at: Date.now() }])
+  const addLine = useCallback((line: Omit<Line, "id" | "at">) => {
+    setLines((prev) => [
+      ...prev.slice(-30),
+      { ...line, id: crypto.randomUUID(), at: Date.now() },
+    ])
   }, [])
 
   const getClient = useCallback((): PipecatClient => {
@@ -326,6 +360,7 @@ export function VoiceCall() {
 
   const start = useCallback(async () => {
     setError(null)
+    setLines([])
     setStatus("connecting")
     try {
       const client = getClient()
@@ -352,11 +387,6 @@ export function VoiceCall() {
     })
   }, [])
 
-  useEffect(() => {
-    const viewport = scrollWrapRef.current?.querySelector('[data-slot="scroll-area-viewport"]')
-    viewport?.scrollTo({ top: viewport.scrollHeight, behavior: "smooth" })
-  }, [lines])
-
   const copy = useMemo(() => {
     if (status === "live" && muted) return t.status.muted
     if (status === "error") return t.status.error
@@ -367,6 +397,7 @@ export function VoiceCall() {
 
   const live = status === "live"
   const connecting = status === "connecting"
+  const reviewing = lines.length > 0 && !live && !connecting
   const headFont = locale === "bn" ? "font-bengali" : "font-heading"
 
   return (
@@ -423,14 +454,11 @@ export function VoiceCall() {
           </div>
         </header>
 
-        <main className="grid flex-1 items-start gap-10 px-5 pt-8 pb-8 sm:px-10 lg:grid-cols-[minmax(0,1.04fr)_minmax(0,1fr)] lg:gap-14 lg:pt-14">
+        <main className="grid flex-1 items-start gap-10 px-5 pt-8 pb-8 sm:px-10 xl:grid-cols-[minmax(0,1.04fr)_minmax(0,1fr)] xl:gap-14 xl:pt-14">
           <section aria-label={t.startAria} className="flex flex-col">
-            <p className="rise-in-1 tracking-label text-[10.5px] font-medium text-muted-foreground/90 uppercase">
-              {t.eyebrow}
-            </p>
             <h1
               className={cn(
-                "rise-in-1 mt-4 max-w-[16ch] text-[clamp(2.5rem,6vw,3.9rem)] leading-[1.06] font-semibold tracking-tight text-balance",
+                "rise-in-1 max-w-[16ch] text-[clamp(2.5rem,6vw,3.9rem)] leading-[1.06] font-semibold tracking-tight text-balance",
                 headFont
               )}
             >
@@ -452,12 +480,31 @@ export function VoiceCall() {
                 >
                   {copy.headline}
                   {live && !muted && (
-                    <span className="ml-1 inline-block h-3.5 w-px animate-pulse bg-primary align-middle" />
+                    <span className="ml-1 inline-block h-3.5 w-px animate-pulse bg-primary align-middle motion-reduce:animate-none" />
                   )}
                 </p>
                 <p className="mt-2 max-w-[32ch] text-[13.5px] leading-[1.75] text-pretty text-muted-foreground">
                   {copy.subline}
                 </p>
+                {prompt && (
+                  <div className="mt-4 flex max-w-md items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 text-[13px] leading-relaxed">
+                    <ChatCircleDots size={15} className="mt-0.5 shrink-0 text-primary" />
+                    <span className="min-w-0 flex-1">
+                      <span className="text-muted-foreground">{t.suggestion.prompt}</span>{" "}
+                      <span lang={locale} className="font-medium">
+                        {prompt}
+                      </span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPrompt(null)}
+                      aria-label={t.suggestion.dismiss}
+                      className="rounded-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -517,7 +564,9 @@ export function VoiceCall() {
             <div aria-hidden className="stitch h-0.75 w-full opacity-70" />
             <CardHeader className="px-6 pt-5 pb-4">
               <div>
-                <CardTitle className="text-[17px]">{t.transcript}</CardTitle>
+                <CardTitle className="text-[17px]">
+                  {reviewing ? t.review.title : t.transcript}
+                </CardTitle>
                 <CardDescription className="mt-1 text-[12.5px]">
                   {lines.length === 0
                     ? t.transcriptSub
@@ -536,11 +585,13 @@ export function VoiceCall() {
                     )}
                   />
                   <span>
-                    {live
-                      ? muted
-                        ? t.transcriptBadge.muted
-                        : t.transcriptBadge.live
-                      : t.transcriptBadge.idle}
+                    {reviewing
+                      ? t.transcriptBadge.recap
+                      : live
+                        ? muted
+                          ? t.transcriptBadge.muted
+                          : t.transcriptBadge.live
+                        : t.transcriptBadge.idle}
                   </span>
                 </Badge>
               </CardAction>
@@ -548,53 +599,81 @@ export function VoiceCall() {
 
             <div aria-hidden className="stitch-soft mx-6 h-px opacity-80" />
 
-            <div
-              ref={scrollWrapRef}
-              className="flex min-h-64 flex-1 flex-col lg:min-h-120"
-            >
-              <ScrollArea className="h-full min-h-64 flex-1 lg:min-h-120">
-                <div className="px-6 py-6">
-                  {lines.length === 0 ? (
-                    <Empty className="border-0 p-2">
-                      <EmptyHeader>
-                        <EmptyMedia variant="icon">
-                          <AlponaMark className="size-5" />
-                        </EmptyMedia>
-                        <EmptyTitle className="text-[17px]">
-                          {t.empty.title}
-                        </EmptyTitle>
-                        <EmptyDescription className="text-[13px] leading-[1.75]">
-                          {t.empty.description}
-                        </EmptyDescription>
-                      </EmptyHeader>
-                      <EmptyContent className="mt-2">
-                        <p className="tracking-label mt-2 text-[10px] font-medium text-muted-foreground uppercase">
-                          {t.empty.trySaying}
-                        </p>
-                        <TrySayingList t={t} />
-                      </EmptyContent>
-                    </Empty>
-                  ) : (
-                    <ol className="flex flex-col gap-6">
-                      {lines.map((line, i) => (
-                        <LineItem
-                          key={`${line.at}-${i}`}
-                          line={line}
-                          speaker={
-                            line.who === "user" ? t.speaker.user : t.speaker.bot
-                          }
-                        />
-                      ))}
-                    </ol>
-                  )}
-                </div>
-              </ScrollArea>
-            </div>
+            <MessageScrollerProvider autoScroll>
+              <MessageScroller className="min-h-64 xl:min-h-120">
+                <MessageScrollerViewport>
+                  <MessageScrollerContent
+                    className={cn(
+                      "gap-5 px-6 py-6",
+                      lines.length === 0 && "justify-center"
+                    )}
+                  >
+                    {lines.length === 0 ? (
+                      <Empty className="border-0 p-2">
+                        <EmptyHeader>
+                          <EmptyMedia variant="icon">
+                            <AlponaMark className="size-5" />
+                          </EmptyMedia>
+                          <EmptyTitle className="text-[17px]">
+                            {t.empty.title}
+                          </EmptyTitle>
+                          <EmptyDescription className="text-[13px] leading-[1.75]">
+                            {t.empty.description}
+                          </EmptyDescription>
+                        </EmptyHeader>
+                        <EmptyContent className="mt-2">
+                          <p className="tracking-label mt-2 text-[11.5px] font-medium text-muted-foreground uppercase">
+                            {t.empty.trySaying}
+                          </p>
+                          <TrySayingList t={t} onSelect={setPrompt} />
+                        </EmptyContent>
+                      </Empty>
+                    ) : (
+                      <div
+                        role="log"
+                        aria-live="polite"
+                        aria-label={t.transcript}
+                        className="flex flex-col gap-5"
+                      >
+                        {lines.map((line) => (
+                          <MessageScrollerItem
+                            key={line.id}
+                            messageId={line.id}
+                            scrollAnchor={line.who === "user"}
+                          >
+                            <LineItem
+                              line={line}
+                              speaker={
+                                line.who === "user" ? t.speaker.user : t.speaker.bot
+                              }
+                            />
+                          </MessageScrollerItem>
+                        ))}
+                      </div>
+                    )}
+                  </MessageScrollerContent>
+                </MessageScrollerViewport>
+                <MessageScrollerButton
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                >
+                  <ArrowDown size={14} />
+                  <span className="sr-only">{t.transcriptJump}</span>
+                </MessageScrollerButton>
+              </MessageScroller>
+            </MessageScrollerProvider>
 
-            <CardFooter className="border-t border-border/70 bg-secondary/25 px-6 py-3.5">
+            <CardFooter className="flex flex-wrap items-center justify-between gap-3 border-t border-border/70 bg-secondary/25 px-6 py-3.5">
               <p className="text-[12px] leading-relaxed text-muted-foreground">
-                {t.footer.tip}
+                {reviewing ? t.review.tip : t.footer.tip}
               </p>
+              {reviewing && (
+                <Button size="sm" variant="outline" onClick={start} className="h-8 shrink-0">
+                  <Microphone size={14} weight="fill" />
+                  {t.review.newCall}
+                </Button>
+              )}
             </CardFooter>
           </Card>
         </main>

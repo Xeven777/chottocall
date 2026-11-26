@@ -130,6 +130,7 @@
     }
   body {
     @apply bg-background text-foreground;
+    caret-color: var(--primary);
     font-feature-settings: "kern" 1, "liga" 1;
     text-rendering: optimizeLegibility;
     }
@@ -194,24 +195,39 @@
     letter-spacing: 0.22em;
   }
 
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--primary) 28%, transparent) transparent;
+  }
+  .scroll-thin::-webkit-scrollbar { width: 8px; }
+  .scroll-thin::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--primary) 28%, transparent);
+    background-clip: content-box;
+    border: 2px solid transparent;
+    border-radius: 999px;
+  }
+
   @keyframes alpona-turn {
     to { transform: rotate(360deg); }
   }
-  .alpona-turn { animation: alpona-turn 90s linear infinite; }
-  .alpona-pulse { animation: alpona-turn 26s linear infinite; }
+  .alpona-spin {
+    animation: alpona-turn 26s linear infinite;
+    transform-box: view-box;
+    transform-origin: 100px 100px;
+  }
 
   @keyframes rise-in {
-    from { opacity: 0; transform: translateY(14px); }
+    from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .rise-in { animation: rise-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
-  .rise-in-1 { animation: rise-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
-  .rise-in-2 { animation: rise-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both; }
-  .rise-in-3 { animation: rise-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.24s both; }
-  .msg-in { animation: rise-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .rise-in { animation: rise-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .rise-in-1 { animation: rise-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) 0.06s both; }
+  .rise-in-2 { animation: rise-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both; }
+  .rise-in-3 { animation: rise-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both; }
+  .msg-in { animation: rise-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
   @media (prefers-reduced-motion: reduce) {
     .rise-in, .rise-in-1, .rise-in-2, .rise-in-3, .msg-in { animation: none; }
-    .alpona-turn, .alpona-pulse { animation: none; }
+    .alpona-spin { animation: none; }
   }
 }

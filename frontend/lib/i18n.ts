@@ -11,7 +11,6 @@ export type Copy = {
   docTitle: string
   brand: string
   tagline: string
-  eyebrow: string
   headline: string
   intro: string
   switchLanguage: string
@@ -36,9 +35,17 @@ export type Copy = {
   errorHint: string
   transcript: string
   transcriptSub: string
-  transcriptBadge: { live: string; muted: string; idle: string }
+  transcriptBadge: { live: string; muted: string; idle: string; recap: string }
+  transcriptJump: string
+  review: { title: string; tip: string; newCall: string }
+  suggestion: { prompt: string; dismiss: string }
   lineCount: (n: number) => string
-  empty: { title: string; description: string; trySaying: string; phrases: readonly string[] }
+  empty: {
+    title: string
+    description: string
+    trySaying: string
+    phrases: readonly string[]
+  }
   speaker: { user: string; bot: string }
   footer: { tip: string; line: string; permission: string }
   admin: {
@@ -59,6 +66,12 @@ export type Copy = {
     enabled: string
     started: string
     messages: string
+    duration: string
+    live: string
+    ended: string
+    noMessages: string
+    deleteConfirm: string
+    deleteCall: string
     empty: string
   }
 }
@@ -68,9 +81,9 @@ export const COPY: Record<Locale, Copy> = {
     docTitle: "চট্টোকল — বাংলায় কথা বলুন",
     brand: "চট্টোকল",
     tagline: "ChottoCall — বাংলা ভয়েস",
-    eyebrow: "শুনি · বুঝি · বলি",
     headline: "বাংলায় কথা বলুন",
-    intro: "মাইক খুলে স্বাভাবিকভাবে বলুন। সে বাংলাতেই উত্তর দেবে — আর নিচে কথাগুলো লেখা থাকবে।",
+    intro:
+      "মাইক খুলে স্বাভাবিকভাবে বলুন। সে বাংলাতেই উত্তর দেবে — আর নিচে কথাগুলো লেখা থাকবে।",
     switchLanguage: "ভাষা বদলান",
     start: "কথা শুরু করুন",
     startAria: "কল শুরু করুন",
@@ -117,13 +130,30 @@ export const COPY: Record<Locale, Copy> = {
     errorHint: "ব্যাকএন্ড চালু থাকলে আবার চেষ্টা করুন।",
     transcript: "কথোপকথন",
     transcriptSub: "আপনি যা বলবেন, সে যা বলবে",
-    transcriptBadge: { live: "শ্রবণ চলছে", muted: "নীরব", idle: "অপেক্ষায়" },
+    transcriptBadge: {
+      live: "শ্রবণ চলছে",
+      muted: "নীরব",
+      idle: "অপেক্ষায়",
+      recap: "কল শেষ",
+    },
+    transcriptJump: "সর্বশেষে যান",
+    review: {
+      title: "কথোপকথনের সারাংশ",
+      tip: "কল শেষ — কথাগুলো এখানে রইলো। নতুন কল শুরু করলে পরিষ্কার হবে।",
+      newCall: "নতুন কল",
+    },
+    suggestion: { prompt: "এই কথাটি বলুন:", dismiss: "প্রস্তাব বন্ধ করুন" },
     lineCount: (n) => `${n} টি লাইন · আপনি ও চট্টোকল`,
     empty: {
       title: "এখনও নীরব",
-      description: "কল শুরু করে বাংলায় কথা বলুন। আপনি যা বলবেন আর সে যা উত্তর দেবে, সব এখানে জমা হবে।",
+      description:
+        "কল শুরু করে বাংলায় কথা বলুন। আপনি যা বলবেন আর সে যা উত্তর দেবে, সব এখানে জমা হবে।",
       trySaying: "এভাবে বলতে পারেন",
-      phrases: ["আসসালামু আলাইকুম, কেমন আছো?", "আজকের আবহাওয়া কেমন?", "আমাকে একটা গল্প বলো"],
+      phrases: [
+        "আসসালামু আলাইকুম, কেমন আছো?",
+        "আজকের আবহাওয়া কেমন?",
+        "আমাকে একটা গল্প বলো",
+      ],
     },
     speaker: { user: "আপনি", bot: "চট্টোকল" },
     footer: {
@@ -149,6 +179,12 @@ export const COPY: Record<Locale, Copy> = {
       enabled: "চালু",
       started: "শুরু",
       messages: "বার্তা",
+      duration: "সময়",
+      live: "চলছে",
+      ended: "শেষ",
+      noMessages: "এই কলে কোনো বার্তা নেই",
+      deleteConfirm: "এই কল ও এর সব বার্তা মুছে ফেলবেন?",
+      deleteCall: "কল মুছুন",
       empty: "কিছু নেই",
     },
   },
@@ -156,9 +192,9 @@ export const COPY: Record<Locale, Copy> = {
     docTitle: "ChottoCall — Speak in Bengali",
     brand: "ChottoCall",
     tagline: "ChottoCall — Bengali voice",
-    eyebrow: "Listen · understand · speak",
     headline: "Speak in Bengali",
-    intro: "Open the mic and talk naturally. It answers in Bengali, and every line lands below.",
+    intro:
+      "Open the mic and talk naturally. It answers in Bengali, and every line lands below.",
     switchLanguage: "Switch language",
     start: "Start the call",
     startAria: "Start the call",
@@ -166,7 +202,11 @@ export const COPY: Record<Locale, Copy> = {
     end: "End call",
     mute: "Mute microphone",
     unmute: "Unmute microphone",
-    meta: { transport: "WebRTC audio", anytime: "Stop any time", theme: "Theme" },
+    meta: {
+      transport: "WebRTC audio",
+      anytime: "Stop any time",
+      theme: "Theme",
+    },
     statusLabel: {
       idle: "Ready",
       connecting: "Connecting",
@@ -201,13 +241,30 @@ export const COPY: Record<Locale, Copy> = {
     errorHint: "Check that the backend is running, then try again.",
     transcript: "Transcript",
     transcriptSub: "What you say, and what it answers",
-    transcriptBadge: { live: "Listening", muted: "Muted", idle: "Standing by" },
+    transcriptBadge: {
+      live: "Listening",
+      muted: "Muted",
+      idle: "Standing by",
+      recap: "Call ended",
+    },
+    transcriptJump: "Jump to latest",
+    review: {
+      title: "Conversation recap",
+      tip: "Call ended — the conversation stays here until you start a new one.",
+      newCall: "New call",
+    },
+    suggestion: { prompt: "Say this:", dismiss: "Dismiss suggestion" },
     lineCount: (n) => `${n} ${n === 1 ? "line" : "lines"} · you and ChottoCall`,
     empty: {
       title: "Nothing yet",
-      description: "Start the call and speak in Bengali. Everything you say and everything it answers lands here.",
+      description:
+        "Start the call and speak in Bengali. Everything you say and everything it answers lands here.",
       trySaying: "Try saying, in Bengali",
-      phrases: ["Assalamu alaikum, how are you?", "What's the weather like today?", "Tell me a story"],
+      phrases: [
+        "Assalamu alaikum, how are you?",
+        "What's the weather like today?",
+        "Tell me a story",
+      ],
     },
     speaker: { user: "You", bot: "ChottoCall" },
     footer: {
@@ -233,6 +290,12 @@ export const COPY: Record<Locale, Copy> = {
       enabled: "Enabled",
       started: "Started",
       messages: "Messages",
+      duration: "Duration",
+      live: "Live",
+      ended: "Ended",
+      noMessages: "No messages in this call",
+      deleteConfirm: "Delete this call and all its messages?",
+      deleteCall: "Delete call",
       empty: "Nothing here yet",
     },
   },

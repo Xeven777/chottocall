@@ -7,6 +7,9 @@ the stages in the order they must run:
           -> output -> assistant aggregator
 """
 
+import asyncio
+import random
+
 from pipecat.frames.frames import TTSSpeakFrame
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.processors.aggregators.llm_context import LLMContext
@@ -47,8 +50,29 @@ SYSTEM = (
 
 # Spoken the moment a tool starts, so the caller never hears dead air while it
 # runs. Deterministic: the model cannot skip it. If the model also says
-# something first, both are heard — keep this short.
-BRIDGING = "একটু দেখে নিচ্ছি।"
+# something first, both are heard — keep these short. Random per call so a
+# repeat caller does not hear the same line every time.
+BRIDGING = (
+    "একটু দেখে নিচ্ছি।",
+    "এক সেকেন্ড, দেখে নিচ্ছি।",
+    "দাঁড়ান, দেখে নিচ্ছি।",
+    "আচ্ছা, একটু দেখছি।",
+)
+# Spoken only if the tool is still running after SLOW_TOOL_S.
+BRIDGING_SLOW = (
+    "একটু সময় লাগছে, প্রায় হয়ে গেছে।",
+    "এখনো দেখছি, এক মুহূর্ত।",
+)
+SLOW_TOOL_S = 4.0
+
+
+async def _slow_acknowledge(service) -> None:
+    await asyncio.sleep(SLOW_TOOL_S)
+    # shortcut: pipecat 1.15 has no public "tool finished" event, so read the
+    # service's task map; if it is renamed the second line just stops firing.
+    running = getattr(service, "_function_call_tasks", {})
+    if any(not task.done() for task in running):
+        await service.push_frame(TTSSpeakFrame(random.choice(BRIDGING_SLOW), append_to_context=False))
 
 
 def build_pipeline(transport: BaseTransport) -> Pipeline:
@@ -69,7 +93,8 @@ def build_pipeline(transport: BaseTransport) -> Pipeline:
     # keeps the acknowledgement independent of what the model chose to say.
     @llm.event_handler("on_function_calls_started")
     async def _acknowledge(service, function_calls):
-        await service.push_frame(TTSSpeakFrame(BRIDGING, append_to_context=False))
+        await service.push_frame(TTSSpeakFrame(random.choice(BRIDGING), append_to_context=False))
+        service.create_task(_slow_acknowledge(service))
 
     return Pipeline(
         [

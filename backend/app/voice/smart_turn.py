@@ -19,6 +19,9 @@ from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnal
 from pipecat.processors.frame_processor import FrameProcessor
 from pipecat.turns.user_start import VADUserTurnStartStrategy
 from pipecat.turns.user_stop import TurnAnalyzerUserTurnStopStrategy
+from pipecat.turns.user_stop.base_user_turn_stop_strategy import (
+    BaseUserTurnStopStrategy,
+)
 from pipecat.turns.user_turn_strategies import (
     MergeMode,
     StrategyMode,
@@ -38,7 +41,7 @@ def default_turn_analyzer() -> LocalSmartTurnAnalyzerV3:
 
 def default_stop_strategies(
     analyzer: LocalSmartTurnAnalyzerV3 | None = None,
-) -> list[TurnAnalyzerUserTurnStopStrategy]:
+) -> list[BaseUserTurnStopStrategy]:
     """Default end-of-turn stop strategy using local SmartTurn v3."""
     return [
         TurnAnalyzerUserTurnStopStrategy(
@@ -67,7 +70,6 @@ def user_turn_strategies_params(
     stop_merge_mode: MergeMode = MergeMode.REPLACE,
     start_mode: StrategyMode = StrategyMode.FIRST,
     stop_mode: StrategyMode = StrategyMode.ALL,
-    audio_idle_timeout: float = 1.0,
 ) -> UserTurnStrategiesParams:
     """Parameters controlling how turn strategies combine and decide.
 
@@ -78,7 +80,6 @@ def user_turn_strategies_params(
         stop_merge_mode=stop_merge_mode,
         start_mode=start_mode,
         stop_mode=stop_mode,
-        audio_idle_timeout=audio_idle_timeout,
     )
 
 
@@ -216,18 +217,16 @@ class SmartTurnProcessor(FrameProcessor):
         self,
         *,
         analyzer: LocalSmartTurnAnalyzerV3 | None = None,
-        user_turn_strategies: UserTurnStrategies | None = None,
-        user_turn_strategies_params: UserTurnStrategiesParams | None = None,
+        strategies: UserTurnStrategies | None = None,
+        params: UserTurnStrategiesParams | None = None,
         user_turn_stop_timeout: float = 5.0,
         user_idle_timeout: float = 0.0,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self._user_turn_processor = UserTurnProcessor(
-            user_turn_strategies=user_turn_strategies or user_turn_strategies(),
-            user_turn_strategies_params=(
-                user_turn_strategies_params or user_turn_strategies_params()
-            ),
+            user_turn_strategies=strategies or user_turn_strategies(),
+            user_turn_strategies_params=params or user_turn_strategies_params(),
             user_turn_stop_timeout=user_turn_stop_timeout,
             user_idle_timeout=user_idle_timeout,
         )

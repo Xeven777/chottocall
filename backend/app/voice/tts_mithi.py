@@ -26,6 +26,7 @@ import threading
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from types import ModuleType
+from typing import Any
 
 from pipecat.frames.frames import Frame, TTSAudioRawFrame
 from pipecat.services.settings import TTSSettings
@@ -85,7 +86,7 @@ def _pcm_chunks(pcm: bytes):
 # Loading takes 1-3 s and a new service is built for every call, so the model
 # lives for the process. The key makes a changed device/path reload instead of
 # silently reusing a model that no longer matches the config.
-_MODEL: tuple[tuple[str, str, int], object] | None = None
+_MODEL: tuple[tuple[str, str, int], Any] | None = None
 _MODEL_LOCK = threading.Lock()
 
 

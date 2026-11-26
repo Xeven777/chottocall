@@ -25,6 +25,16 @@ def enabled_tools() -> list:
     return [tool for tool in TOOLS if tool.__name__ not in disabled_tools]
 
 
+async def ensure_rows(names: list[str]) -> None:
+    """Missing rows mean 'enabled'; materialize them so admin and DB agree."""
+    async with SessionLocal() as session:
+        existing = set((await session.execute(select(ToolToggle.name))).scalars().all())
+        missing = [name for name in names if name not in existing]
+        if missing:
+            session.add_all(ToolToggle(name=name, enabled=True) for name in missing)
+            await session.commit()
+
+
 async def set_enabled(name: str, enabled: bool) -> None:
     async with SessionLocal() as session:
         toggle = await session.get(ToolToggle, name)

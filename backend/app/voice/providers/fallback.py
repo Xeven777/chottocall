@@ -9,6 +9,7 @@ would repeat the beginning, so the rest of that sentence is dropped instead.
 """
 
 from collections.abc import AsyncGenerator
+from typing import cast
 
 from loguru import logger
 from pipecat.frames.frames import Frame
@@ -24,7 +25,7 @@ class FallbackTTSService(TTSService):
     def __init__(
         self, *, primary: TTSService, fallback: TTSService, **kwargs
     ) -> None:
-        settings = primary.settings
+        settings = cast(TTSSettings, primary.settings)
         # ``sample_rate`` only reports a value after setup; the declared rate is
         # what the base class needs at construction time (TTSService treats 0 as
         # "use the transport rate", which would mismatch the frames the inner

@@ -2,15 +2,17 @@
 
 import asyncio
 import os
+from datetime import datetime
 from pathlib import Path
 from uuid import UUID, uuid4
 
 import httpx
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel
-from sqlalchemy import delete, func, select, text
+from sqlalchemy import delete, func, select, text, update
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
+from pipecat.frames.frames import EndFrame
 from pipecat.observers.function_call_observer import FunctionCallObserver
 from pipecat.pipeline.worker import PipelineParams, PipelineWorker
 from pipecat.transports.base_transport import TransportParams
@@ -27,7 +29,7 @@ from app.knowledge.db import SessionLocal
 from app.knowledge.ingest import ingest_path
 from app.knowledge.models import Chunk, Document, Message, Session, ToolToggle
 from app.knowledge.recorder import TranscriptRecorder
-from app.knowledge.registry import load_disabled, set_enabled
+from app.knowledge.registry import ensure_rows, load_disabled, set_enabled
 from app.voice.pipeline import build_pipeline
 from app.voice.providers.base import ProviderUnavailable
 from app.voice.settings import KnowledgeConfig, LLMConfig
@@ -91,10 +93,23 @@ async def run_bot(connection) -> None:
         observers=[_tool_logger(), TranscriptRecorder(session_id)],
     )
 
+    # SmallWebRTC does not push EndFrame on its own when the peer leaves; without
+    # this the pipeline never ends and the session's ended_at is never set.
+    @transport.event_handler("on_client_disconnected")
+    async def on_client_disconnected(_transport, _client):
+        if not worker.has_finished():
+            await worker.queue_frame(EndFrame())
+
     async def run() -> None:
         runner = WorkerRunner(handle_sigint=False)
         await runner.add_workers(worker)
         await runner.run()
+        # Runs after the worker is gone, so observer cleanup can't cancel it.
+        async with SessionLocal() as db:
+            await db.execute(
+                update(Session).where(Session.id == session_id).values(ended_at=func.now())
+            )
+            await db.commit()
 
     # Must return before the SDP answer is sent, so the pipeline runs detached.
     task = asyncio.create_task(run())
@@ -231,9 +246,12 @@ async def list_knowledge() -> list[dict]:
 @app.delete("/api/admin/knowledge/{document_id}")
 async def delete_knowledge(document_id: UUID) -> dict[str, str]:
     async with SessionLocal() as session:
-        result = await session.execute(delete(Document).where(Document.id == document_id))
+        result = await session.execute(
+            delete(Document).where(Document.id == document_id).returning(Document.id)
+        )
+        removed = result.first()
         await session.commit()
-    if not result.rowcount:
+    if removed is None:
         raise HTTPException(status_code=404, detail="document not found")
     return {"status": "ok"}
 
@@ -245,6 +263,7 @@ class ToolState(BaseModel):
 @app.get("/api/admin/tools")
 async def list_tools() -> list[dict]:
     names = [tool.__name__ for tool in TOOLS]
+    await ensure_rows(names)
     async with SessionLocal() as session:
         toggles = {
             row[0]: row[1]
@@ -259,6 +278,10 @@ async def update_tool(name: str, state: ToolState) -> dict:
         raise HTTPException(status_code=404, detail="tool not found")
     await set_enabled(name, state.enabled)
     return {"name": name, "enabled": state.enabled}
+
+
+def _iso(value: datetime | None) -> str | None:
+    return value.isoformat() if value else None
 
 
 @app.get("/api/admin/sessions")
@@ -282,8 +305,50 @@ async def list_sessions() -> list[dict]:
         {
             "id": str(row[0]),
             "started_at": row[1].isoformat(),
-            "ended_at": row[2].isoformat() if row[2] else None,
+            "ended_at": _iso(row[2]),
             "messages": row[3],
         }
         for row in rows
     ]
+
+
+@app.get("/api/admin/sessions/{session_id}")
+async def get_session(session_id: UUID) -> dict:
+    async with SessionLocal() as session:
+        row = (
+            await session.execute(
+                select(Session.id, Session.started_at, Session.ended_at).where(
+                    Session.id == session_id
+                )
+            )
+        ).first()
+        if row is None:
+            raise HTTPException(status_code=404, detail="session not found")
+        messages = (
+            await session.execute(
+                select(Message.id, Message.role, Message.text, Message.at)
+                .where(Message.session_id == session_id)
+                .order_by(Message.id)
+            )
+        ).all()
+    return {
+        "id": str(row[0]),
+        "started_at": row[1].isoformat(),
+        "ended_at": _iso(row[2]),
+        "messages": [
+            {"id": m[0], "role": m[1], "text": m[2], "at": m[3].isoformat()} for m in messages
+        ],
+    }
+
+
+@app.delete("/api/admin/sessions/{session_id}")
+async def delete_session(session_id: UUID) -> dict[str, str]:
+    async with SessionLocal() as session:
+        result = await session.execute(
+            delete(Session).where(Session.id == session_id).returning(Session.id)
+        )
+        removed = result.first()
+        await session.commit()
+    if removed is None:
+        raise HTTPException(status_code=404, detail="session not found")
+    return {"status": "ok"}

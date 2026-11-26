@@ -35,7 +35,7 @@ export function AlponaRing({
   return (
     <svg viewBox="0 0 200 200" fill="none" aria-hidden className={cn("size-full", className)}>
       <circle cx="100" cy="100" r="94" stroke="currentColor" strokeWidth="0.8" opacity="0.28" />
-      <g className={listening ? "alpona-pulse" : undefined}>
+      <g className={listening ? "alpona-spin" : undefined}>
         {petals.map((i) => (
           <rect
             key={i}
