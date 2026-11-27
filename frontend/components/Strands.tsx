@@ -304,8 +304,7 @@ void main() {
     float haze = exp(-pow((1.0 - r) / 0.09, 2.0)) * hzk * 0.13 * uRim;
     vec3 orb;
     if (uLight > 0.5) {
-      float lz = dot(d * r, vec2(-0.55, 0.83));
-      vec3 body = mix(vec3(0.885, 0.893, 0.915), vec3(0.972, 0.975, 0.983), 0.5 + 0.5 * lz);
+      vec3 body = vec3(1.0);
       float fres = smoothstep(0.8, 1.0, r);
       body = mix(body, vec3(0.82, 0.83, 0.86), fres * fres * 0.5);
       orb = lightInk(L, halo, body);
@@ -314,7 +313,7 @@ void main() {
       float edge = exp(-pow((1.0 - r) / (0.01 + 1.2 * px), 2.0));
       orb *= 1.0 - 0.12 * edge;
     } else {
-      orb = vec3(0.04) + col * (1.0 + 0.1 * bend * uRim) + ring * key * uRim * (1.0 + 0.4 * level) + haze * vec3(1.0, 1.02, 1.04);
+      orb = vec3(0.0) + col * (1.0 + 0.1 * bend * uRim) + ring * key * uRim * (1.0 + 0.4 * level) + haze * vec3(1.0, 1.02, 1.04);
       orb = grade(clamp(orb, 0.0, 1.0));
     }
     float inside = clamp((1.0 - rho) / px + 0.5, 0.0, 1.0) * appear;
@@ -413,6 +412,7 @@ export default function Strands({
 }: StrandsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const propsRef = useRef<StrandsConfig>({} as StrandsConfig);
+  // eslint-disable-next-line react-hooks/refs
   propsRef.current = {
     colors,
     count,

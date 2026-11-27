@@ -1,8 +1,13 @@
 "use client"
 
-import Image from "next/image"
+import { useTheme } from "next-themes"
 import { memo, useEffect, useState } from "react"
-import { AnimatePresence, motion, useReducedMotion } from "motion/react"
+import {
+  motion,
+  useAnimationFrame,
+  useMotionValue,
+  useReducedMotion,
+} from "motion/react"
 
 import Strands from "@/components/Strands"
 
@@ -23,7 +28,6 @@ export function orbMode(
   return speaker === "user" ? "hearing" : "listening"
 }
 
-/* The five logo petals, as thin strokes — the outline face of the orb. */
 const PETALS = [
   "M85.1305 176.538C88.0421 175.012 91.5934 174.154 94.7959 173.409C113.531 168.664 131.621 165.818 151.052 166.202C170.995 166.654 192.895 171.583 210.873 180.631C214.648 182.544 222.975 185.253 223.273 190.344C223.511 194.197 223.523 198.069 223.75 201.925C225.335 236.463 237.502 270.288 254.282 300.035C265.306 319.448 281.54 336.898 299.813 349.238C315.239 359.132 332.042 366.137 350.429 367.2C357.787 367.649 353.313 373.1 349.738 376.197C307.581 412.107 243.48 428.529 188.715 424.419C161.818 422.24 134.898 416.764 110.254 405.367C83.4998 392.423 58.4371 372.843 40.1227 349.035C17.5309 319.727 -2.83039 278.499 0.324099 240.154C1.76251 223.067 27.8238 206.795 40.5376 198.314C54.5139 189.475 69.5197 181.958 85.1305 176.538Z",
   "M344.635 399.219C346.371 396.581 348.934 394.546 350.613 391.825C352.26 389.14 358.851 368.419 364.504 370.92C365.948 371.543 367.746 377.427 368.299 379.077C373.292 393.982 378.436 409.005 379.701 424.808C380.422 433.817 380.806 442.908 380.362 451.939C379.777 463.421 376.901 474.819 374.43 485.997C366.534 522.564 351.63 557.596 328.193 586.815C313.211 605.466 296.24 621.11 276.778 634.663C243.909 657.653 199.404 672.94 159.318 669.748C150.309 669.028 141.748 667.68 132.903 665.732C128.798 664.846 124.501 663.882 120.902 661.607C118.198 659.895 115.524 656.58 113.757 653.918C92.2699 621.787 87.1122 577.855 92.0446 540.383C94.7549 520.25 101.732 499.974 111.882 482.401C118.135 471.317 126 460.871 133.994 450.974C135.152 448.809 138.033 444.278 140.771 444.546C143.353 444.81 144.889 445.262 147.379 445.993C170.723 452.807 196.222 457.666 220.583 455.457C245.938 453.083 272.233 447.73 295.371 436.685C314.891 427.668 328.469 412.704 344.635 399.219Z",
@@ -33,37 +37,64 @@ const PETALS = [
 ]
 
 const loop = { repeat: Infinity, ease: "easeInOut" as const }
-const linear = { repeat: Infinity, ease: "linear" as const }
 
+/* Rotation via a motion value, so changing speed never restarts the spin. */
+function useSpin(speed: number, direction: 1 | -1) {
+  const rotate = useMotionValue(0)
+  useAnimationFrame((_, delta) => {
+    if (speed) rotate.set(rotate.get() + (delta / 1000) * speed * direction)
+  })
+  return rotate
+}
+
+/* One persistent flower: idle fills it, live states hollow it into an outline. */
 function FlowerOutline({
   className,
-  spin,
+  filled,
+  opacity = 1,
+  speed = 0,
+  direction = 1,
+  style,
 }: {
   className?: string
-  spin: "cw" | "ccw" | false
+  filled: boolean
+  opacity?: number
+  speed?: number
+  direction?: 1 | -1
+  style?: React.CSSProperties
 }) {
   const reduce = useReducedMotion()
+  const rotate = useSpin(speed, direction)
   return (
-    <motion.svg
-      viewBox="-30 -30 777 748"
-      fill="none"
+    <span
       aria-hidden
-      className={className}
-      animate={
-        !reduce && spin ? { rotate: spin === "cw" ? 360 : -360 } : undefined
-      }
-      transition={spin ? { duration: 26, ...linear } : undefined}
+      className={`grid place-items-center ${className}`}
+      style={style}
     >
-      {PETALS.map((d) => (
-        <path
-          key={d.slice(0, 24)}
-          d={d}
-          stroke="currentColor"
-          strokeWidth="7"
-          strokeLinejoin="round"
-        />
-      ))}
-    </motion.svg>
+      <motion.svg
+        viewBox="-30 -30 777 748"
+        className="size-full"
+        style={{ rotate }}
+        animate={{ opacity }}
+        transition={{ duration: reduce ? 0 : 0.6, ease: "easeInOut" }}
+      >
+        {PETALS.map((d) => (
+          <motion.path
+            key={d.slice(0, 24)}
+            d={d}
+            fill="currentColor"
+            stroke="currentColor"
+            strokeWidth="11"
+            strokeLinejoin="round"
+            animate={{
+              fillOpacity: filled ? 1 : 0,
+              strokeOpacity: filled ? 0 : 1,
+            }}
+            transition={{ duration: reduce ? 0 : 0.3, ease: "easeInOut" }}
+          />
+        ))}
+      </motion.svg>
+    </span>
   )
 }
 
@@ -87,37 +118,15 @@ const Ripples = ({ fast }: { fast: boolean }) => (
   </>
 )
 
-const BARS = Array.from({ length: 32 }, (_, i) => i)
-
-const Bars = () => (
-  <>
-    {BARS.map((i) => (
-      <span
-        key={i}
-        aria-hidden
-        className="absolute inset-0"
-        style={{ transform: `rotate(${i * (360 / BARS.length)}deg)` }}
-      >
-        <motion.span
-          className="absolute top-1 left-1/2 h-6 w-0.75 -translate-x-1/2 rounded-full bg-linear-to-b from-saffron to-alta"
-          style={{ transformOrigin: "50% 124px" }}
-          animate={{
-            scaleY: [0.25, 1, 0.4, 0.85, 0.25],
-            opacity: [0.5, 1, 0.6, 1, 0.5],
-          }}
-          transition={{
-            duration: 1.1 + (i % 5) * 0.12,
-            delay: (i % 8) * 0.07,
-            ...loop,
-          }}
-        />
-      </span>
-    ))}
-  </>
-)
-
-/* WebGL strand field — the orb's living depth layer. */
-// const BRAND = ["#FFAE32", "#9E0B0F", "#750005", "#FFEEDD"]
+const BRAND = [
+  "#ff2a1f",
+  "#ff5a2e",
+  "#ff7a1a",
+  "#ffe2a8",
+  "#ffb37a",
+  "#ff3d2e",
+  "#c42a6a",
+]
 
 const STRANDS: Record<
   OrbMode,
@@ -143,36 +152,49 @@ const STRANDS: Record<
   muted: { level: 0.06, speed: 0.4, count: 1, energy: 0.3, intensity: 0.6 },
 }
 
-// const OrbStrands = memo(function OrbStrands({
-//   level,
-//   mode,
-// }: {
-//   level: number
-//   mode: OrbMode
-// }) {
-//   const cfg = STRANDS[mode]
-//   return (
-//     <div className="absolute inset-0 overflow-hidden rounded-full">
-//       <Strands
-//         colors={BRAND}
-//         count={cfg.count}
-//         speed={cfg.speed}
-//         energy={cfg.energy}
-//         intensity={cfg.intensity}
-//         level={level}
-//         listening={mode !== "idle"}
-//         glass
-//         glassSize={1.02}
-//         rim={1.25}
-//         glow={1.15}
-//         interactive={false}
-//         clickPulse={false}
-//         intro={false}
-//         className="size-full"
-//       />
-//     </div>
-//   )
-// })
+const OrbStrands = memo(function OrbStrands({
+  level,
+  mode,
+  light,
+}: {
+  level: number
+  mode: OrbMode
+  light: boolean
+}) {
+  const cfg = STRANDS[mode]
+  return (
+    <div className="absolute inset-0 overflow-hidden rounded-full">
+      <Strands
+        className="size-full"
+        lightMode={light}
+        colors={BRAND}
+        count={cfg.count}
+        speed={cfg.speed}
+        energy={cfg.energy}
+        intensity={cfg.intensity}
+        level={level}
+        listening={mode !== "idle"}
+        amplitude={2}
+        waviness={2.5}
+        thickness={2.5}
+        spread={2.5}
+        glow={1.3}
+        taper={1.35}
+        saturation={1.15}
+        hueShift={0}
+        scale={1.6}
+        glass
+        glassSize={1}
+        refraction={1.3}
+        rim={1.45}
+        dispersion={1}
+        interactive
+        clickPulse
+        intro
+      />
+    </div>
+  )
+})
 
 export const Orb = memo(function Orb({
   mode,
@@ -211,11 +233,23 @@ export const Orb = memo(function Orb({
     return () => window.clearInterval(id)
   }, [mode, levelsRef])
 
-  /* idle: breathing glow · listening: inward ripples · replying: voice bars.
-     idle shows the filled logo; live states cross-fade to the outline mark. */
+  const { resolvedTheme } = useTheme()
+  const light = resolvedTheme === "light"
+  const ink = light ? "text-crimson" : "text-cream"
+
+  /* Choreography: idle fills the flower; connecting hollows it to one outline
+     in 300ms; listening fades a second outline in and turns both slowly; while
+     someone speaks the two turn at different speeds. */
+  const connecting = mode === "connecting"
+  const speaking = mode === "hearing" || mode === "replying"
+  const live = mode === "listening" || speaking
+  const pair = live
+  const slow = 9.5
+  const cwSpeed = live && animated ? (speaking ? 13 : slow) : 0
+  const ccwSpeed = live && animated ? (speaking ? 7 : slow) : 0
   const halo =
     mode === "idle" || mode === "muted"
-      ? { scale: [1, 1.05, 1], opacity: [0.55, 0.8, 0.55] }
+      ? { scale: 1, opacity: 0.7 }
       : { scale: 1.04, opacity: 1 }
 
   return (
@@ -224,16 +258,11 @@ export const Orb = memo(function Orb({
         aria-hidden
         className="absolute inset-4 rounded-full bg-[radial-gradient(circle,color-mix(in_oklch,var(--brand-saffron)_42%,transparent),color-mix(in_oklch,var(--brand-alta)_12%,transparent)_55%,transparent_75%)]"
         animate={animated ? halo : { opacity: 0.7 }}
-        transition={
-          mode === "idle" || mode === "muted"
-            ? { duration: 4, ...loop }
-            : { duration: 0.4 }
-        }
+        transition={{ duration: 0.6, ease: "easeOut" }}
       />
       {animated && (mode === "listening" || mode === "hearing") && (
         <Ripples fast={mode === "hearing"} />
       )}
-      {animated && mode === "replying" && <Bars />}
 
       <motion.button
         type="button"
@@ -259,69 +288,45 @@ export const Orb = memo(function Orb({
             ? { duration: 0.9, ...loop }
             : { type: "spring", duration: 0.35, bounce: 0.2 }
         }
-        className="relative grid size-40 place-items-center overflow-hidden rounded-full border border-white/70 bg-[radial-gradient(circle_at_30%_25%,var(--brand-saffron),var(--brand-alta)_58%,var(--brand-crimson))] shadow-2xl outline-none focus-visible:ring-4 focus-visible:ring-saffron/40 disabled:cursor-default sm:size-44"
+        className="relative grid size-40 place-items-center overflow-hidden rounded-full outline-none focus-visible:ring-4 focus-visible:ring-saffron/40 disabled:cursor-default sm:size-50"
       >
-        {/* <OrbStrands level={level} mode={mode} /> */}
-        <AnimatePresence initial={false} mode="popLayout">
-          {mode === "idle" ? (
-            <motion.span
-              key="filled"
-              className="grid place-items-center"
-              initial={animated ? { opacity: 0, scale: 0.92 } : false}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.12 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <Image
-                src="/logo.svg"
-                alt=""
-                width={112}
-                height={112}
-                priority
-                unoptimized
-                className="size-24 drop-shadow-lg sm:size-28"
-              />
-            </motion.span>
-          ) : (
-            <motion.span
-              key="outline"
-              className="grid place-items-center text-cream"
-              initial={animated ? { opacity: 0, scale: 0.92 } : false}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.92 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-            >
-              {mode === "connecting" ? (
-                /* pulsing halo + two tilted outlines slowly counter-rotating */
-                <>
-                  <motion.span
-                    aria-hidden
-                    className="absolute inset-6 rounded-full bg-cream/10"
-                    animate={{ scale: [1, 1.25], opacity: [0.5, 0] }}
-                    transition={{ duration: 1.3, ...linear }}
-                  />
-                  <FlowerOutline
-                    spin={animated ? "cw" : false}
-                    className="absolute size-26 rotate-22 opacity-90 sm:size-30"
-                  />
-                  <FlowerOutline
-                    spin={animated ? "ccw" : false}
-                    className="absolute size-26 -rotate-22 opacity-55 sm:size-30"
-                  />
-                </>
-              ) : (
-                <FlowerOutline
-                  spin={false}
-                  className={
-                    mode === "muted"
-                      ? "size-24 opacity-60 sm:size-28"
-                      : "size-24 sm:size-28"
-                  }
-                />
-              )}
-            </motion.span>
-          )}
-        </AnimatePresence>
+        <OrbStrands level={level} mode={mode} light={light} />
+        {connecting && (
+          <motion.span
+            aria-hidden
+            className={`absolute inset-4 rounded-full border ${light ? "border-crimson/40" : "border-cream/50"}`}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: [0.8, 1.35], opacity: [0.6, 0] }}
+            transition={{
+              duration: 2.2,
+              delay: 0.45,
+              repeat: Infinity,
+              ease: "easeOut",
+            }}
+          />
+        )}
+        <FlowerOutline
+          filled={mode === "idle"}
+          opacity={mode === "muted" ? 0.6 : 1}
+          speed={cwSpeed}
+          direction={1}
+          className={`absolute size-24 sm:size-28 ${ink}`}
+          style={{
+            rotate: pair ? "18deg" : "0deg",
+            transition: "rotate 0.6s ease",
+          }}
+        />
+        <FlowerOutline
+          filled={mode === "idle"}
+          opacity={pair ? 1 : 0}
+          speed={ccwSpeed}
+          direction={-1}
+          className={`absolute size-24 sm:size-28 ${ink}`}
+          style={{
+            rotate: pair ? "18deg" : "0deg",
+            transition: "rotate 0.6s ease",
+          }}
+        />
       </motion.button>
     </div>
   )

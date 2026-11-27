@@ -4,7 +4,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
-import { code, display, sans, serifBn, ui } from "@/lib/fonts"
+import { code, GeistSerif, sans, serifBn, ui } from "@/lib/fonts"
 
 export const metadata: Metadata = {
   title: "চট্টোকল — Bengali voice assistant",
@@ -38,13 +38,13 @@ export default function RootLayout({
       className={cn(
         "antialiased",
         code.variable,
-        display.variable,
         serifBn.variable,
         sans.variable,
-        ui.variable
+        ui.variable,
+        GeistSerif.variable
       )}
     >
-      <body className="min-h-dvh bg-background font-sans text-foreground">
+      <body className="min-h-dvh font-sans">
         <ThemeProvider>
           {children}
           <Toaster position="top-center" />

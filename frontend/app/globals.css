@@ -102,7 +102,7 @@
 
 @theme inline {
   --font-sans: var(--font-body), var(--font-bn), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-display), var(--font-bn-serif), ui-serif, Georgia, serif;
+  --font-heading: var(--font-geist-serif), var(--font-bn-serif), ui-serif, Georgia, serif;
   --font-bengali: var(--font-bn), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-code), ui-monospace, monospace;
 

@@ -1,10 +1,11 @@
 import {
+  Geist_Mono,
   Libertinus_Sans,
-  Newsreader,
+  // Newsreader,
   Noto_Sans_Bengali,
   Noto_Serif_Bengali,
-  Source_Code_Pro,
 } from "next/font/google"
+import { GeistSerif } from "geist/font/serif"
 
 const ui = Noto_Sans_Bengali({
   subsets: ["bengali", "latin"],
@@ -12,11 +13,12 @@ const ui = Noto_Sans_Bengali({
   variable: "--font-bn",
 })
 
-const display = Newsreader({
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  variable: "--font-display",
-})
+// const display = Newsreader({
+//   subsets: ["latin"],
+//   weight: ["400", "500"],
+//   style: ["normal", "italic"],
+//   variable: "--font-display",
+// })
 
 const serifBn = Noto_Serif_Bengali({
   subsets: ["bengali", "latin"],
@@ -32,9 +34,9 @@ const sans = Libertinus_Sans({
   adjustFontFallback: false,
 })
 
-const code = Source_Code_Pro({
+const code = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-code",
 })
 
-export { ui, display, serifBn, sans, code }
+export { ui, serifBn, sans, code, GeistSerif }
